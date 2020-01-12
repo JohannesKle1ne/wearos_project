@@ -18,6 +18,7 @@ class MainActivity : WearableActivity() {
         mainButton.setOnClickListener {
             val rand = Random().nextInt(10)
             buttonOutput.text = rand.toString()
+            //comment
         }
 
     }
