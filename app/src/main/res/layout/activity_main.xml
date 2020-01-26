@@ -2,12 +2,19 @@
 <androidx.wear.widget.BoxInsetLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    style="@style/AppTheme"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/dark_grey"
     android:padding="@dimen/box_inset_layout_padding"
     tools:context=".MainActivity"
     tools:deviceIds="wear">
+
+    <com.example.wearos_project.PaintView
+        style="@style/AppTheme"
+        android:id="@+id/paintView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/frameLayout"
@@ -16,24 +23,26 @@
         app:boxedEdges="all"
         tools:ignore="MissingPrefix">
 
+
         <Button
-            android:id="@+id/mainButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/buttonString"
-            app:layout_constraintBottom_toTopOf="@+id/buttonOutput"
+            android:id="@+id/sendButton"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:background="@drawable/send_button"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+        <Button
+            android:id="@+id/convertButton"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:background="@drawable/convert_button"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
         <TextView
-            android:id="@+id/buttonOutput"
+            android:id="@+id/resultText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="TextView"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
