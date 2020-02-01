@@ -4,7 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.Intent;
+
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -22,9 +22,6 @@ import com.google.android.gms.wearable.MessageClient;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Node;
 
-import com.google.android.gms.wearable.WearableListenerService;
-import com.google.gson.Gson;
-
 
 import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.text.TextBlock;
@@ -32,10 +29,6 @@ import com.google.android.gms.vision.text.TextRecognizer;
 import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.List;
 
 
@@ -56,13 +49,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         button = findViewById(R.id.button);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                sendMessage();
+                //sendMessage();
             }
         });
 
-        //getTextFromImage();
 
-        //startService(new Intent(this, WLService.class));
 
         client = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
@@ -73,8 +64,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     public void getTextFromImage(Bitmap bitmap){
-
-
 
         imageView.setImageBitmap(bitmap);
 
@@ -113,9 +102,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                 getTextFromImage(bmp);
                 Log.i("Received message", new String(bytes));
+                sendMessage();
             }
         });
-
         Log.i("Phone client connected", String.valueOf(client.isConnected()));
     }
 

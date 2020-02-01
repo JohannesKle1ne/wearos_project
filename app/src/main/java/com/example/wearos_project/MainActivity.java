@@ -5,20 +5,15 @@ import android.os.Bundle;
 import android.support.wearable.activity.WearableActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.util.SparseArray;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
+
+import android.view.KeyEvent;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.vision.Frame;
-import com.google.android.gms.vision.text.TextBlock;
-import com.google.android.gms.vision.text.TextRecognizer;
+
 import com.google.android.gms.wearable.MessageClient;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Node;
@@ -27,16 +22,14 @@ import com.google.android.gms.wearable.Wearable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
+
 import java.util.List;
 
 
 public class MainActivity extends WearableActivity implements GoogleApiClient.ConnectionCallbacks{
 
-    private TextView resultText;
+
     private PaintView paintView;
-    private Button sendButton;
-    private Button convertButton;
     private GoogleApiClient client;
     private String currentString;
     private List<Node> connectedNode;
@@ -46,25 +39,14 @@ public class MainActivity extends WearableActivity implements GoogleApiClient.Co
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        sendButton = findViewById(R.id.sendButton);
-        convertButton = findViewById(R.id.convertButton);
         paintView = findViewById(R.id.paintView);
-        resultText = findViewById(R.id.resultText);
-
-
 
         DisplayMetrics displayMetrics = new DisplayMetrics();
-
 
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 
         paintView.initialise(displayMetrics);
 
-        convertButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                sendMessage();
-            }
-        });
 
         client = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
@@ -73,26 +55,19 @@ public class MainActivity extends WearableActivity implements GoogleApiClient.Co
         client.connect();
 
     }
-    public void getStringFromBitmap(){
-        TextRecognizer tr = new TextRecognizer.Builder(getApplicationContext()).build();
 
-        if(!tr.isOperational()){
-            Log.i("TR",String.valueOf(tr.isOperational()));
-            Toast.makeText(getApplicationContext(), "Could not get the Text",Toast.LENGTH_SHORT).show();
-        }else{
-            Frame frame = new Frame.Builder().setBitmap(paintView.getBitmap()).build();
-            SparseArray<TextBlock> items = tr.detect(frame);
-            StringBuilder sb = new StringBuilder();
-            for(int i=0; i<items.size(); i++){
-                TextBlock myItem = items.valueAt(i);
-                sb.append(myItem.getValue());
-                sb.append("\n");
-                Log.i("ITEM", myItem.getValue());
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (event.getRepeatCount() == 0) {
+            if (keyCode == KeyEvent.KEYCODE_STEM_1) {
+                paintView.undo();
+                return true;
+            } else if (keyCode == KeyEvent.KEYCODE_STEM_2) {
+                sendMessage();
+                return true;
             }
-            resultText.setText(sb.toString());
-
         }
-        paintView.clear();
+        return super.onKeyDown(keyCode, event);
     }
 
     @Override
@@ -120,11 +95,12 @@ public class MainActivity extends WearableActivity implements GoogleApiClient.Co
         Log.i("Wear", "Google Api Client connection suspended!");
 
     }
+    
 
     public void sendMessage() {
+        Bitmap bitmap = paintView.getBitmap(); //auslagern, an methode übergeben
 
-        Bitmap bitmap = paintView.getBitmap();
-
+        //convert Bitmap to Byte
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
         byte[] byteArray = stream.toByteArray();
@@ -134,11 +110,7 @@ public class MainActivity extends WearableActivity implements GoogleApiClient.Co
             e.printStackTrace();
         }
 
-
         for (int i = 0; i < connectedNode.size(); i++) {
-            //String defaultMessage = "messageFromWatch";
-            //byteArray = defaultMessage.getBytes();
-
             Wearable.MessageApi.sendMessage(client, connectedNode.get(i).getId(), "/meal", byteArray);
             Log.i("Message sent", new String(byteArray));
         }
