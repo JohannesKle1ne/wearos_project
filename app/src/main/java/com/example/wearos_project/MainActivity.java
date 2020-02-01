@@ -5,25 +5,31 @@ import android.support.wearable.activity.WearableActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseArray;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.text.TextBlock;
 import com.google.android.gms.vision.text.TextRecognizer;
+import com.google.android.gms.wearable.MessageClient;
+import com.google.android.gms.wearable.MessageEvent;
+import com.google.android.gms.wearable.Wearable;
 
-import java.util.*;
 
-public class MainActivity extends WearableActivity {
+public class MainActivity extends WearableActivity implements GoogleApiClient.ConnectionCallbacks{
 
     private TextView resultText;
     private PaintView paintView;
     private Button sendButton;
     private Button convertButton;
+    private GoogleApiClient client;
+    private String currentString;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +56,12 @@ public class MainActivity extends WearableActivity {
             }
         });
 
+        client = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addApi(Wearable.API)
+                .build();
+        client.connect();
+
     }
 
     public void getStringFromBitmap(){
@@ -73,4 +85,24 @@ public class MainActivity extends WearableActivity {
         }
         paintView.clear();
     }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        Log.i("connected!", "");
+        Wearable.MessageApi.addListener(client, new MessageClient.OnMessageReceivedListener() {
+            @Override
+            public void onMessageReceived(@NonNull MessageEvent messageEvent) {
+                currentString = new String(messageEvent.getData());
+                Log.i("RECEIVED!", currentString);
+            }
+        });
+
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        Log.i("Wear", "Google Api Client connection suspended!");
+
+    }
+
 }
