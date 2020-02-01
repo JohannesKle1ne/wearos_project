@@ -1,5 +1,6 @@
 package com.example.wearos_project;
 
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.wearable.activity.WearableActivity;
 import android.util.DisplayMetrics;
@@ -24,6 +25,9 @@ import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.List;
 
 
@@ -69,7 +73,6 @@ public class MainActivity extends WearableActivity implements GoogleApiClient.Co
         client.connect();
 
     }
-
     public void getStringFromBitmap(){
         TextRecognizer tr = new TextRecognizer.Builder(getApplicationContext()).build();
 
@@ -106,7 +109,7 @@ public class MainActivity extends WearableActivity implements GoogleApiClient.Co
             @Override
             public void onMessageReceived(@NonNull MessageEvent messageEvent) {
                 currentString = new String(messageEvent.getData());
-                Log.i("RECEIVED!", currentString);
+                Log.i("Received message", currentString);
             }
         });
 
@@ -119,14 +122,27 @@ public class MainActivity extends WearableActivity implements GoogleApiClient.Co
     }
 
     public void sendMessage() {
-        Log.i("Try to Send", "Try");
-        for (int i = 0; i < connectedNode.size(); i++) {
-            String message = "messageFromWear";
-            byte[] bytes = message.getBytes();
-            Wearable.MessageApi.sendMessage(client, connectedNode.get(i).getId(), "/meal", bytes);
-            Log.i("Message Send", message);
-            Log.i("NodeID", connectedNode.get(i).getId());
+
+        Bitmap bitmap = paintView.getBitmap();
+
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        byte[] byteArray = stream.toByteArray();
+        try {
+            stream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+
+
+        for (int i = 0; i < connectedNode.size(); i++) {
+            //String defaultMessage = "messageFromWatch";
+            //byteArray = defaultMessage.getBytes();
+
+            Wearable.MessageApi.sendMessage(client, connectedNode.get(i).getId(), "/meal", byteArray);
+            Log.i("Message sent", new String(byteArray));
+        }
+        paintView.clear();
     }
 
 }

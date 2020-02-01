@@ -12,6 +12,7 @@ import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,12 +33,16 @@ import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks {
 
     TextView outputView;
+    ImageView imageView;
     Button button;
     private GoogleApiClient client;
     private List<Node> connectedNode;
@@ -47,6 +52,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         outputView = findViewById(R.id.output);
+        imageView = findViewById(R.id.image);
         button = findViewById(R.id.button);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -66,13 +72,18 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     }
 
-    public void getTextFromImage(){
-        Bitmap bitmap = BitmapFactory.decodeResource(getApplicationContext().getResources(),R.drawable.tree);
+    public void getTextFromImage(Bitmap bitmap){
+
+
+
+        imageView.setImageBitmap(bitmap);
+
         TextRecognizer tr = new TextRecognizer.Builder(getApplicationContext()).build();
 
         if(!tr.isOperational()){
             Toast.makeText(getApplicationContext(), "Could not get the Text",Toast.LENGTH_SHORT).show();
         }else{
+            Log.i("Bitmap",bitmap.toString());
             Frame frame = new Frame.Builder().setBitmap(bitmap).build();
             SparseArray<TextBlock> items = tr.detect(frame);
             StringBuilder sb = new StringBuilder();
@@ -98,12 +109,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         Wearable.MessageApi.addListener(client, new MessageClient.OnMessageReceivedListener() {
             @Override
             public void onMessageReceived(@NonNull MessageEvent messageEvent) {
-                String currentString = new String(messageEvent.getData());
-                Log.i("RECEIVED!", currentString);
+                byte[] bytes = messageEvent.getData();
+                Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                getTextFromImage(bmp);
+                Log.i("Received message", new String(bytes));
             }
         });
 
-        Log.i("connected", String.valueOf(client.isConnected()));
+        Log.i("Phone client connected", String.valueOf(client.isConnected()));
     }
 
     @Override
@@ -112,13 +125,12 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     public void sendMessage() {
-        Log.i("Try to Send", "Try");
+
         for (int i = 0; i < connectedNode.size(); i++) {
             String message = "messageFromPhone";
             byte[] bytes = message.getBytes();
             Wearable.MessageApi.sendMessage(client, connectedNode.get(i).getId(), "/meal", bytes);
-            Log.i("Message Send", message);
-            Log.i("NodeID", connectedNode.get(i).getId());
+            Log.i("Message sent", message);
         }
     }
 
