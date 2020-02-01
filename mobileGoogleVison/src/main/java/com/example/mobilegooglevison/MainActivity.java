@@ -1,5 +1,6 @@
 package com.example.mobilegooglevison;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -16,6 +17,8 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.wearable.MessageClient;
+import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Node;
 
 import com.google.android.gms.wearable.WearableListenerService;
@@ -91,6 +94,15 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 connectedNode = getConnectedNodesResult.getNodes();
             }
         });
+
+        Wearable.MessageApi.addListener(client, new MessageClient.OnMessageReceivedListener() {
+            @Override
+            public void onMessageReceived(@NonNull MessageEvent messageEvent) {
+                String currentString = new String(messageEvent.getData());
+                Log.i("RECEIVED!", currentString);
+            }
+        });
+
         Log.i("connected", String.valueOf(client.isConnected()));
     }
 
@@ -102,13 +114,12 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     public void sendMessage() {
         Log.i("Try to Send", "Try");
         for (int i = 0; i < connectedNode.size(); i++) {
-            String message = "message";
+            String message = "messageFromPhone";
             byte[] bytes = message.getBytes();
             Wearable.MessageApi.sendMessage(client, connectedNode.get(i).getId(), "/meal", bytes);
             Log.i("Message Send", message);
+            Log.i("NodeID", connectedNode.get(i).getId());
         }
-
-
     }
 
 

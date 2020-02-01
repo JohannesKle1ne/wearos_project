@@ -14,12 +14,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.text.TextBlock;
 import com.google.android.gms.vision.text.TextRecognizer;
 import com.google.android.gms.wearable.MessageClient;
 import com.google.android.gms.wearable.MessageEvent;
+import com.google.android.gms.wearable.Node;
+import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
+
+import java.util.List;
 
 
 public class MainActivity extends WearableActivity implements GoogleApiClient.ConnectionCallbacks{
@@ -30,6 +35,7 @@ public class MainActivity extends WearableActivity implements GoogleApiClient.Co
     private Button convertButton;
     private GoogleApiClient client;
     private String currentString;
+    private List<Node> connectedNode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +58,7 @@ public class MainActivity extends WearableActivity implements GoogleApiClient.Co
 
         convertButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                getStringFromBitmap();
+                sendMessage();
             }
         });
 
@@ -89,6 +95,13 @@ public class MainActivity extends WearableActivity implements GoogleApiClient.Co
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         Log.i("connected!", "");
+        Wearable.NodeApi.getConnectedNodes(client).setResultCallback(new ResultCallback<NodeApi.GetConnectedNodesResult>() {
+            @Override
+            public void onResult(NodeApi.GetConnectedNodesResult getConnectedNodesResult) {
+                connectedNode = getConnectedNodesResult.getNodes();
+            }
+        });
+
         Wearable.MessageApi.addListener(client, new MessageClient.OnMessageReceivedListener() {
             @Override
             public void onMessageReceived(@NonNull MessageEvent messageEvent) {
@@ -103,6 +116,17 @@ public class MainActivity extends WearableActivity implements GoogleApiClient.Co
     public void onConnectionSuspended(int i) {
         Log.i("Wear", "Google Api Client connection suspended!");
 
+    }
+
+    public void sendMessage() {
+        Log.i("Try to Send", "Try");
+        for (int i = 0; i < connectedNode.size(); i++) {
+            String message = "messageFromWear";
+            byte[] bytes = message.getBytes();
+            Wearable.MessageApi.sendMessage(client, connectedNode.get(i).getId(), "/meal", bytes);
+            Log.i("Message Send", message);
+            Log.i("NodeID", connectedNode.get(i).getId());
+        }
     }
 
 }
