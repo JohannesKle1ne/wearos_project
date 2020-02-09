@@ -2,6 +2,7 @@ package com.example.wearos_project;
 
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.support.wearable.activity.WearableActivity;
@@ -30,13 +31,14 @@ import java.io.IOException;
 import java.util.List;
 
 
-public class MainActivity extends WearableActivity implements GoogleApiClient.ConnectionCallbacks{
+public class MainActivity extends WearableActivity implements
+        GoogleApiClient.ConnectionCallbacks{
 
 
     private PaintView paintView;
     private GoogleApiClient client;
-    private String currentString;
     private List<Node> connectedNode;
+    private CountDownTimer letterTimer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +51,7 @@ public class MainActivity extends WearableActivity implements GoogleApiClient.Co
 
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 
-        paintView.initialise(displayMetrics);
+        paintView.initialise(displayMetrics, this);
 
 
         client = new GoogleApiClient.Builder(this)
@@ -57,6 +59,10 @@ public class MainActivity extends WearableActivity implements GoogleApiClient.Co
                 .addApi(Wearable.API)
                 .build();
         client.connect();
+
+        for(int i = 0; i<10;i++){
+            Log.d("MAINACTIVITY", "FOORLOOP");
+        }
 
     }
 
@@ -67,7 +73,6 @@ public class MainActivity extends WearableActivity implements GoogleApiClient.Co
                 paintView.undo();
                 return true;
             } else if (keyCode == KeyEvent.KEYCODE_STEM_2) {
-                sendMessage();
                 return true;
             }
         }
@@ -110,7 +115,23 @@ public class MainActivity extends WearableActivity implements GoogleApiClient.Co
         Log.i("Wear", "Google Api Client connection suspended!");
 
     }
-    
+
+    public void sendSpace(){
+        send(MessageDict.space.getBytes());
+    }
+
+    public void sendBitmap(){
+        Bitmap bitmap = paintView.getBitmap();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        byte[] byteArray = stream.toByteArray();
+        try {
+            stream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        send(byteArray);
+    }
 
     public void sendMessage() {
         Bitmap bitmap = paintView.getBitmap(); //auslagern, an methode übergeben
@@ -127,14 +148,47 @@ public class MainActivity extends WearableActivity implements GoogleApiClient.Co
 
         for (int i = 0; i < connectedNode.size(); i++) {
             Wearable.MessageApi.sendMessage(client, connectedNode.get(i).getId(), "/meal", byteArray);
-            Log.i("MessageDict sent", new String(byteArray));
+            Log.i("MessageDict sent", "ByteArray");
         }
         paintView.clear();
     }
 
+    public void send(byte[] byteArray){
+        for (int i = 0; i < connectedNode.size(); i++) {
+            Wearable.MessageApi.sendMessage(client, connectedNode.get(i).getId(), "/meal", byteArray);
+            Log.i("MessageDict sent", "ByteArray");
+        }
+    }
+
+
     public void vibrate(){
         Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
         vibrator.vibrate(VibrationEffect.createOneShot(100,VibrationEffect.DEFAULT_AMPLITUDE));
+    }
+
+    //start timer function
+    public void startTimer() {
+        if(letterTimer!=null) {
+            letterTimer.cancel();
+        }
+        letterTimer = new CountDownTimer(1000, 100) {
+            public void onTick(long millisUntilFinished) {
+                Log.i("onTick","milliseconds remaining: " + millisUntilFinished);
+            }
+            public void onFinish() {
+                Log.i("onFinish","done!");
+                sendBitmap();
+                paintView.clear();
+            }
+        };
+        letterTimer.start();
+    }
+
+
+    //cancel timer
+    public void cancelTimer() {
+        if(letterTimer!=null)
+            letterTimer.cancel();
     }
 
 }

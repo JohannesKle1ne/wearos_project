@@ -10,9 +10,12 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Message;
 import android.util.Log;
 import android.util.SparseArray;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -36,13 +39,18 @@ import com.google.android.gms.wearable.Wearable;
 import java.util.List;
 
 
-public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks {
+public class MainActivity extends AppCompatActivity implements
+        GoogleApiClient.ConnectionCallbacks,
+        GestureDetector.OnGestureListener,
+        GestureDetector.OnDoubleTapListener{
 
     TextView outputView;
     ImageView imageView;
     private GoogleApiClient client;
     private List<Node> connectedNode;
     private String word;
+    private static final String TAG = "PHONE_MAIN";
+    private GestureDetector gestureDetector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +69,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 .addApi(Wearable.API)
                 .build();
         client.connect();
+
+        gestureDetector = new GestureDetector(this, this);
 
     }
 
@@ -86,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             }
             String result = sb.toString();
             word = word+result;
-            outputView.setText("Received:   "+word);
+            outputView.setText(outputView.getText().toString()+sb.toString());
             Log.i("outputString1", word);
 
             if(!result.isEmpty()){
@@ -115,8 +125,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             @Override
             public void onMessageReceived(@NonNull MessageEvent messageEvent) {
                 byte[] bytes = messageEvent.getData();
-                Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                getTextFromImage(bmp);
+
+                handleMessage(bytes);
                 //Log.i("Received message", new String(bytes));
             }
         });
@@ -128,6 +138,19 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         connectedNode = null;
     }
 
+    private void handleMessage(byte[] bytes) {
+        String message = new String(bytes);
+        switch(message){
+            case (MessageDict.space):
+                outputView.setText(outputView.getText().toString()+" ");
+                Toast.makeText(this, "received space", Toast.LENGTH_SHORT).show();
+                break;
+            default:
+                Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                getTextFromImage(bmp);
+        }
+    }
+
     public void sendMessage(String message) {
         for (int i = 0; i < connectedNode.size(); i++) {
             byte[] bytes = message.getBytes();
@@ -136,5 +159,82 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
     }
 
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
 
+        gestureDetector.onTouchEvent(event);
+
+        /*switch (event.getAction()) {
+
+            case MotionEvent.ACTION_DOWN:
+                Log.i(TAG, "ACTION_DONW");
+                break;
+            case MotionEvent.ACTION_UP:
+                Log.i(TAG, "ACTION_UP");
+                break;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                Log.i(TAG, "ACTION_POINTER_DOWN");
+                break;
+            case MotionEvent.ACTION_POINTER_UP:
+                Log.i(TAG, "ACTION_POINTER_UP");
+                break;
+            case MotionEvent.ACTION_MOVE:
+                //Log.i(TAG, "ACTION_MOVE");
+                break;
+        }*/
+        return super.onTouchEvent(event);
+    }
+
+
+
+
+
+
+
+
+    @Override
+    public boolean onDown(MotionEvent e) {
+        return false;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent e) {
+
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent e) {
+        return false;
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+        return false;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent e) {
+
+    }
+
+    @Override
+    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        return false;
+    }
+
+    @Override
+    public boolean onSingleTapConfirmed(MotionEvent e) {
+        return false;
+    }
+
+    @Override
+    public boolean onDoubleTap(MotionEvent e) {
+        Log.i(TAG, "double tap");
+        return false;
+    }
+
+    @Override
+    public boolean onDoubleTapEvent(MotionEvent e) {
+        return false;
+    }
 }

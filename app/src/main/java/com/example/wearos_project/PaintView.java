@@ -1,5 +1,6 @@
 package com.example.wearos_project;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -9,6 +10,8 @@ import android.graphics.Path;
 import android.os.Environment;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
@@ -19,7 +22,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class PaintView extends View {
+public class PaintView extends View implements GestureDetector.OnGestureListener,
+        GestureDetector.OnDoubleTapListener {
 
     public static final int DEFAULT_COLOR = Color.WHITE;
     public static final int DEFAULT_BG_COLOR = Color.BLACK;
@@ -40,6 +44,11 @@ public class PaintView extends View {
 
     private ArrayList<Path> paths = new ArrayList<>();
     private ArrayList<Path> undo = new ArrayList<>();
+
+    private MainActivity mainActivity;
+    private static final String TAG = "PaintView";
+    private GestureDetector gestureDetector;
+
 
     public PaintView(Context context) {
 
@@ -62,9 +71,14 @@ public class PaintView extends View {
         paint.setXfermode(null);
         paint.setAlpha(0xff);
 
+        gestureDetector = new GestureDetector(context, this);
+
+
     }
 
-    public void initialise (DisplayMetrics displayMetrics) {
+    public void initialise (DisplayMetrics displayMetrics, Activity activity) {
+
+        mainActivity = (MainActivity) activity;
 
         int height = displayMetrics.heightPixels;
         int width = displayMetrics.widthPixels;
@@ -73,8 +87,6 @@ public class PaintView extends View {
         blackBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         mCanvas = new Canvas(bitmap);
         blackCanvas = new Canvas(blackBitmap);
-
-
 
     }
 
@@ -92,7 +104,7 @@ public class PaintView extends View {
 
         }
 
-        canvas.drawBitmap(blackBitmap, 0, 0, mBitmapPaint);
+        canvas.drawBitmap(bitmap, 0, 0, mBitmapPaint); //change this to black to Hide
         canvas.restore();
 
     }
@@ -139,19 +151,25 @@ public class PaintView extends View {
         float x = event.getX();
         float y = event.getY();
 
+        gestureDetector.onTouchEvent(event);
+
         switch (event.getAction()) {
 
             case MotionEvent.ACTION_DOWN:
                 touchStart(x, y);
-                //invalidate();
+                invalidate();
+                mainActivity.cancelTimer();
                 break;
             case MotionEvent.ACTION_UP:
                 touchUp();
                 invalidate();
+                mainActivity.startTimer();
+                break;
+            case MotionEvent.ACTION_POINTER_DOWN:
                 break;
             case MotionEvent.ACTION_MOVE:
                 touchMove(x, y);
-                //invalidate();
+                invalidate();
                 break;
 
         }
@@ -194,70 +212,61 @@ public class PaintView extends View {
         } else {
 
             Toast.makeText(getContext(), "Nothing to undo", Toast.LENGTH_LONG).show();
-
         }
-
     }
 
-    public void saveImage () {
 
-        int count = 0;
-
-        File sdDirectory = Environment.getExternalStorageDirectory();
-        File subDirectory = new File(sdDirectory.toString() + "/Pictures/Paint");
-
-        if (subDirectory.exists()) {
-
-            File[] existing = subDirectory.listFiles();
-
-            for (File file : existing) {
-
-                if (file.getName().endsWith(".jpg") || file.getName().endsWith(".png")) {
-
-                    count++;
-
-                }
-
-            }
-
-        } else {
-
-            subDirectory.mkdir();
-
-        }
-
-        if (subDirectory.exists()) {
-
-            File image = new File(subDirectory, "/drawing_" + (count + 1) + ".png");
-            FileOutputStream fileOutputStream;
-
-            try {
-
-                fileOutputStream = new FileOutputStream(image);
-
-                //bitmap.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream);
-
-                fileOutputStream.flush();
-                fileOutputStream.close();
-
-                Toast.makeText(getContext(), "saved", Toast.LENGTH_LONG).show();
-
-            } catch (FileNotFoundException e) {
-
-
-            } catch (IOException e) {
-
-
-            }
-
-        }
-
-    }
 
     public Bitmap getBitmap() {
         return bitmap;
     }
 
 
+    @Override
+    public boolean onSingleTapConfirmed(MotionEvent e) {
+        return false;
+    }
 
+    @Override
+    public boolean onDoubleTap(MotionEvent e) {
+        Log.d(TAG, "double tap");
+        mainActivity.sendSpace();
+        mainActivity.cancelTimer();
+        return false;
+    }
+
+    @Override
+    public boolean onDoubleTapEvent(MotionEvent e) {
+        return false;
+    }
+
+    @Override
+    public boolean onDown(MotionEvent e) {
+        return false;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent e) {
+
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent e) {
+        return false;
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+        return false;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent e) {
+
+    }
+
+    @Override
+    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        return false;
+    }
 }

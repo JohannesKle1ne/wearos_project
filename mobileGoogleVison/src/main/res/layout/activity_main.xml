@@ -18,8 +18,8 @@
 
     <TextView
         android:id="@+id/output"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="312dp"
+        android:layout_height="103dp"
         android:layout_marginStart="32dp"
         android:text="Received: "
         android:textSize="25dp"
