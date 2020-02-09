@@ -7,7 +7,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Message;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
@@ -16,6 +19,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.shared.MessageDict;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.wearable.MessageClient;
@@ -36,22 +40,19 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     TextView outputView;
     ImageView imageView;
-    Button button;
     private GoogleApiClient client;
     private List<Node> connectedNode;
+    private String word;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getSupportActionBar().hide();
+        word = "";
+
         setContentView(R.layout.activity_main);
         outputView = findViewById(R.id.output);
         imageView = findViewById(R.id.image);
-        button = findViewById(R.id.button);
-        button.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                //sendMessage();
-            }
-        });
 
 
 
@@ -63,7 +64,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     }
 
-    public void getTextFromImage(Bitmap bitmap){
+    public void getTextFromImage(Bitmap bm){
+
+        Bitmap bitmap = addBlackBorder(bm, 1000);
 
         imageView.setImageBitmap(bitmap);
 
@@ -79,11 +82,24 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             for(int i=0; i<items.size(); i++){
                 TextBlock myItem = items.valueAt(i);
                 sb.append(myItem.getValue());
-                sb.append("\n");
                 Log.i("ITEM", myItem.getValue());
             }
-            outputView.setText(sb.toString());
+            String result = sb.toString();
+            word = word+result;
+            outputView.setText("Received:   "+word);
+            Log.i("outputString1", word);
+
+            if(!result.isEmpty()){
+                sendMessage(MessageDict.ack);
+            }
         }
+    }
+    private Bitmap addBlackBorder(Bitmap bmp, int borderSize) {
+        Bitmap bmpWithBorder = Bitmap.createBitmap(bmp.getWidth() + borderSize * 2, bmp.getHeight() + borderSize * 2, bmp.getConfig());
+        Canvas canvas = new Canvas(bmpWithBorder);
+        canvas.drawColor(Color.BLACK);
+        canvas.drawBitmap(bmp, borderSize, borderSize, null);
+        return bmpWithBorder;
     }
 
     @Override
@@ -101,8 +117,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 byte[] bytes = messageEvent.getData();
                 Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                 getTextFromImage(bmp);
-                Log.i("Received message", new String(bytes));
-                sendMessage();
+                //Log.i("Received message", new String(bytes));
             }
         });
         Log.i("Phone client connected", String.valueOf(client.isConnected()));
@@ -113,13 +128,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         connectedNode = null;
     }
 
-    public void sendMessage() {
-
+    public void sendMessage(String message) {
         for (int i = 0; i < connectedNode.size(); i++) {
-            String message = "messageFromPhone";
             byte[] bytes = message.getBytes();
             Wearable.MessageApi.sendMessage(client, connectedNode.get(i).getId(), "/meal", bytes);
-            Log.i("Message sent", message);
+            Log.i("MessageDict sent", message);
         }
     }
 

@@ -33,7 +33,9 @@ public class PaintView extends View {
     private int backgroundColor = DEFAULT_BG_COLOR;
 
     private Bitmap bitmap;
+    private Bitmap blackBitmap;
     private Canvas mCanvas;
+    private Canvas blackCanvas;
     private Paint mBitmapPaint = new Paint(Paint.DITHER_FLAG);
 
     private ArrayList<Path> paths = new ArrayList<>();
@@ -68,7 +70,9 @@ public class PaintView extends View {
         int width = displayMetrics.widthPixels;
 
         bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        blackBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         mCanvas = new Canvas(bitmap);
+        blackCanvas = new Canvas(blackBitmap);
 
 
 
@@ -79,7 +83,8 @@ public class PaintView extends View {
     protected void onDraw(Canvas canvas) {
 
         canvas.save();
-        mCanvas.drawColor(backgroundColor); // WRONG
+        mCanvas.drawColor(backgroundColor);
+        blackCanvas.drawColor(backgroundColor);
 
         for (Path path : paths) {
 
@@ -87,7 +92,7 @@ public class PaintView extends View {
 
         }
 
-        canvas.drawBitmap(bitmap, 0, 0, mBitmapPaint);
+        canvas.drawBitmap(blackBitmap, 0, 0, mBitmapPaint);
         canvas.restore();
 
     }
@@ -138,7 +143,7 @@ public class PaintView extends View {
 
             case MotionEvent.ACTION_DOWN:
                 touchStart(x, y);
-                invalidate();
+                //invalidate();
                 break;
             case MotionEvent.ACTION_UP:
                 touchUp();
@@ -146,7 +151,7 @@ public class PaintView extends View {
                 break;
             case MotionEvent.ACTION_MOVE:
                 touchMove(x, y);
-                invalidate();
+                //invalidate();
                 break;
 
         }

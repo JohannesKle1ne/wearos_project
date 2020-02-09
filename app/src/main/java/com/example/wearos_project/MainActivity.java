@@ -2,15 +2,19 @@ package com.example.wearos_project;
 
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.support.wearable.activity.WearableActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
 import android.view.KeyEvent;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.example.shared.MessageDict;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 
@@ -83,11 +87,22 @@ public class MainActivity extends WearableActivity implements GoogleApiClient.Co
         Wearable.MessageApi.addListener(client, new MessageClient.OnMessageReceivedListener() {
             @Override
             public void onMessageReceived(@NonNull MessageEvent messageEvent) {
-                currentString = new String(messageEvent.getData());
-                Log.i("Received message", currentString);
+                String message = new String(messageEvent.getData());
+                Log.i("Received message", message);
+                handleMessage(message);
             }
         });
 
+    }
+
+    private void handleMessage(String message) {
+        switch(message){
+            case (MessageDict.ack):
+                vibrate();
+                break;
+            default:
+                Toast.makeText(this, "received unknown message", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -112,9 +127,14 @@ public class MainActivity extends WearableActivity implements GoogleApiClient.Co
 
         for (int i = 0; i < connectedNode.size(); i++) {
             Wearable.MessageApi.sendMessage(client, connectedNode.get(i).getId(), "/meal", byteArray);
-            Log.i("Message sent", new String(byteArray));
+            Log.i("MessageDict sent", new String(byteArray));
         }
         paintView.clear();
+    }
+
+    public void vibrate(){
+        Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+        vibrator.vibrate(VibrationEffect.createOneShot(100,VibrationEffect.DEFAULT_AMPLITUDE));
     }
 
 }

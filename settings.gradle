@@ -1,2 +1,2 @@
-include ':app', ':mobileGoogleVison'
+include ':app', ':mobileGoogleVison', ':shared'
 rootProject.name='WearOS_Project'
