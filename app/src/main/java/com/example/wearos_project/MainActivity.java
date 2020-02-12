@@ -41,6 +41,8 @@ public class MainActivity extends WearableActivity implements
     private CountDownTimer letterTimer;
     private static final String TAG = "WATCH_MAIN";
 
+    private TextBuilder textbuilder;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +50,7 @@ public class MainActivity extends WearableActivity implements
         setContentView(R.layout.activity_main);
 
         paintView = findViewById(R.id.paintView);
+        textbuilder = new TextBuilder();
 
         DisplayMetrics displayMetrics = new DisplayMetrics();
 
@@ -67,9 +70,11 @@ public class MainActivity extends WearableActivity implements
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (event.getRepeatCount() == 0) {
             if (keyCode == KeyEvent.KEYCODE_STEM_1) {
-                paintView.undo();
+                //paintView.undo();
+                textbuilder.resetResult();
                 return true;
             } else if (keyCode == KeyEvent.KEYCODE_STEM_2) {
+                sendBitmap(textbuilder.getResult());
                 return true;
             }
         }
@@ -117,8 +122,7 @@ public class MainActivity extends WearableActivity implements
         send(MessageDict.SPACE.getBytes());
     }
 
-    public void sendBitmap(){
-        Bitmap bitmap = paintView.getBitmap();
+    public void sendBitmap(Bitmap bitmap){
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
         byte[] byteArray = stream.toByteArray();
@@ -154,7 +158,11 @@ public class MainActivity extends WearableActivity implements
             }
             public void onFinish() {
                 Log.i("onFinish","done!");
-                sendBitmap();
+                Bitmap bitmap = paintView.getBitmap();
+                //sendBitmap(bitmap);
+                textbuilder.addLetter(bitmap);
+                vibrate();
+                //sendBitmap(textbuilder.getResult());
                 paintView.clear();
             }
         };
@@ -166,5 +174,10 @@ public class MainActivity extends WearableActivity implements
         if(letterTimer!=null)
             letterTimer.cancel();
     }
+
+    public TextBuilder getTextbuilder() {
+        return textbuilder;
+    }
+
 
 }

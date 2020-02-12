@@ -227,6 +227,17 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
     }
 
 
+
+
+
+
+
+
+
+
+
+    //Touch functions
+
     @Override
     public boolean onSingleTapConfirmed(MotionEvent e) {
         Log.d(TAG, "onSingleTapConfirmed");
@@ -237,7 +248,8 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
     @Override
     public boolean onDoubleTap(MotionEvent e) {
         Log.d(TAG, "double tap");
-        mainActivity.sendSpace();
+        //mainActivity.sendSpace();
+        mainActivity.getTextbuilder().addSpace();
         doubleTapped = true;
         mainActivity.cancelTimer();
         return false;

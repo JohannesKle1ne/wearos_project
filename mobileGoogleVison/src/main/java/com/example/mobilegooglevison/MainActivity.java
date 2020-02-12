@@ -63,7 +63,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     public void getTextFromImage(Bitmap bm){
 
-        Bitmap bitmap = addBlackBorder(bm, 1000);
+        //other branch
+        imageView.setImageBitmap(bm);
+
+        Bitmap bitmap = bm;
 
         imageView.setImageBitmap(bitmap);
 
@@ -80,7 +83,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 sb.append(myItem.getValue());
             }
             String result = sb.toString();
-            outputView.setText(outputView.getText().toString()+sb.toString());
+            //used when word is concatinated at phone
+            //outputView.setText(outputView.getText().toString()+sb.toString());
+            outputView.setText("Received: "+sb.toString());
 
             if(!result.isEmpty()){
                 sendMessage(MessageDict.ACK);
