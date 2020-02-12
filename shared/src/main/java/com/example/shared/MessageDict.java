@@ -1,6 +1,6 @@
 package com.example.shared;
 
 public class MessageDict {
-    public static final String ack = "ack";
-    public static final String space = "space";
+    public static final String ACK = "ack";
+    public static final String SPACE = "space";
 }

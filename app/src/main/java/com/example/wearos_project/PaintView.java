@@ -7,7 +7,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.os.Environment;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -16,10 +15,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 
 public class PaintView extends View implements GestureDetector.OnGestureListener,
@@ -237,6 +232,7 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
 
     @Override
     public boolean onDoubleTapEvent(MotionEvent e) {
+        mainActivity.cancelTimer();
         return false;
     }
 

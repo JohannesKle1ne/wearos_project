@@ -39,6 +39,8 @@ public class MainActivity extends WearableActivity implements
     private GoogleApiClient client;
     private List<Node> connectedNode;
     private CountDownTimer letterTimer;
+    private static final String TAG = "WATCH_MAIN";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,11 +61,6 @@ public class MainActivity extends WearableActivity implements
                 .addApi(Wearable.API)
                 .build();
         client.connect();
-
-        for(int i = 0; i<10;i++){
-            Log.d("MAINACTIVITY", "FOORLOOP");
-        }
-
     }
 
     @Override
@@ -102,7 +99,7 @@ public class MainActivity extends WearableActivity implements
 
     private void handleMessage(String message) {
         switch(message){
-            case (MessageDict.ack):
+            case (MessageDict.ACK):
                 vibrate();
                 break;
             default:
@@ -117,7 +114,7 @@ public class MainActivity extends WearableActivity implements
     }
 
     public void sendSpace(){
-        send(MessageDict.space.getBytes());
+        send(MessageDict.SPACE.getBytes());
     }
 
     public void sendBitmap(){
@@ -133,26 +130,6 @@ public class MainActivity extends WearableActivity implements
         send(byteArray);
     }
 
-    public void sendMessage() {
-        Bitmap bitmap = paintView.getBitmap(); //auslagern, an methode übergeben
-
-        //convert Bitmap to Byte
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-        byte[] byteArray = stream.toByteArray();
-        try {
-            stream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        for (int i = 0; i < connectedNode.size(); i++) {
-            Wearable.MessageApi.sendMessage(client, connectedNode.get(i).getId(), "/meal", byteArray);
-            Log.i("MessageDict sent", "ByteArray");
-        }
-        paintView.clear();
-    }
-
     public void send(byte[] byteArray){
         for (int i = 0; i < connectedNode.size(); i++) {
             Wearable.MessageApi.sendMessage(client, connectedNode.get(i).getId(), "/meal", byteArray);
@@ -166,7 +143,7 @@ public class MainActivity extends WearableActivity implements
         vibrator.vibrate(VibrationEffect.createOneShot(100,VibrationEffect.DEFAULT_AMPLITUDE));
     }
 
-    //start timer function
+
     public void startTimer() {
         if(letterTimer!=null) {
             letterTimer.cancel();
@@ -185,7 +162,6 @@ public class MainActivity extends WearableActivity implements
     }
 
 
-    //cancel timer
     public void cancelTimer() {
         if(letterTimer!=null)
             letterTimer.cancel();
