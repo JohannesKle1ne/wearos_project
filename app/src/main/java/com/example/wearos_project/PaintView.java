@@ -20,10 +20,10 @@ import java.util.ArrayList;
 public class PaintView extends View implements GestureDetector.OnGestureListener,
         GestureDetector.OnDoubleTapListener {
 
-    public static final int DEFAULT_COLOR = Color.WHITE;
+    public static final int DEFAULT_COLOR = Color.BLACK;
     public static final int DEFAULT_BG_COLOR = Color.BLACK;
     private static final float TOUCH_TOLERANCE = 4;
-    public static final int DEFAULT_STROKE_WIDTH = 10;
+    public static final int DEFAULT_STROKE_WIDTH = 15;
 
 
     private float mX, mY;
@@ -93,7 +93,7 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
     protected void onDraw(Canvas canvas) {
 
         canvas.save();
-        mCanvas.drawColor(backgroundColor);
+        mCanvas.drawColor(Color.WHITE);
         blackCanvas.drawColor(backgroundColor);
 
         for (Path path : paths) {
@@ -102,7 +102,7 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
 
         }
 
-        canvas.drawBitmap(bitmap, 0, 0, mBitmapPaint); //change this to black to Hide
+        canvas.drawBitmap(blackBitmap, 0, 0, mBitmapPaint); //change this to black to Hide
         canvas.restore();
 
     }
@@ -140,7 +140,7 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
     private void touchUp () {
 
         if(!doubleTapped){
-            mainActivity.startTimer();
+            mainActivity.startLetterTimer();
         }else{
             clear();
             doubleTapped = false;
@@ -163,7 +163,7 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
             case MotionEvent.ACTION_DOWN:
                 touchStart(x, y);
                 invalidate();
-                mainActivity.cancelTimer();
+                mainActivity.cancelLetterTimer();
                 break;
             case MotionEvent.ACTION_UP:
                 Log.d(TAG, "actionUp");
@@ -250,14 +250,15 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
         Log.d(TAG, "double tap");
         //mainActivity.sendSpace();
         mainActivity.getTextbuilder().addSpace();
+        mainActivity.vibrate();
         doubleTapped = true;
-        mainActivity.cancelTimer();
+        mainActivity.cancelLetterTimer();
         return false;
     }
 
     @Override
     public boolean onDoubleTapEvent(MotionEvent e) {
-        mainActivity.cancelTimer();
+        mainActivity.cancelLetterTimer();
         Log.d(TAG, "double tap event");
         return false;
     }

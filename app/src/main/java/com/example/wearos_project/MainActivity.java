@@ -40,6 +40,7 @@ public class MainActivity extends WearableActivity implements
     private List<Node> connectedNode;
     private CountDownTimer letterTimer;
     private static final String TAG = "WATCH_MAIN";
+    private boolean waitingForReset = false;
 
     private TextBuilder textbuilder;
 
@@ -70,8 +71,15 @@ public class MainActivity extends WearableActivity implements
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (event.getRepeatCount() == 0) {
             if (keyCode == KeyEvent.KEYCODE_STEM_1) {
-                //paintView.undo();
-                textbuilder.resetResult();
+                if (waitingForReset){
+                    textbuilder.resetResult();
+                    waitingForReset = false;
+                    Log.i(TAG, "RESET");
+                }else{
+                    textbuilder.removeLetter();
+                    startResetTimer();
+                    Log.i(TAG, "REMOVE");
+                }
                 return true;
             } else if (keyCode == KeyEvent.KEYCODE_STEM_2) {
                 sendBitmap(textbuilder.getResult());
@@ -123,15 +131,20 @@ public class MainActivity extends WearableActivity implements
     }
 
     public void sendBitmap(Bitmap bitmap){
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-        byte[] byteArray = stream.toByteArray();
-        try {
-            stream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if(bitmap==null){
+            Log.i(TAG, "send Error! item to send is null");
+            send(MessageDict.EMPTY.getBytes());
+        }else {
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            byte[] byteArray = stream.toByteArray();
+            try {
+                stream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            send(byteArray);
         }
-        send(byteArray);
     }
 
     public void send(byte[] byteArray){
@@ -148,29 +161,42 @@ public class MainActivity extends WearableActivity implements
     }
 
 
-    public void startTimer() {
+    public void startLetterTimer() {
         if(letterTimer!=null) {
             letterTimer.cancel();
         }
-        letterTimer = new CountDownTimer(1000, 100) {
+        letterTimer = new CountDownTimer(400, 100) {
             public void onTick(long millisUntilFinished) {
-                Log.i("onTick","milliseconds remaining: " + millisUntilFinished);
             }
             public void onFinish() {
                 Log.i("onFinish","done!");
                 Bitmap bitmap = paintView.getBitmap();
-                //sendBitmap(bitmap);
                 textbuilder.addLetter(bitmap);
                 vibrate();
-                //sendBitmap(textbuilder.getResult());
                 paintView.clear();
             }
         };
         letterTimer.start();
     }
 
+    public void startResetTimer() {
+        if(letterTimer!=null) {
+            letterTimer.cancel();
+        }
+        waitingForReset = true;
+        letterTimer = new CountDownTimer(200, 100) {
+            public void onTick(long millisUntilFinished) {
+            }
+            public void onFinish() {
+                waitingForReset =false;
+                Log.i("onFinish","done!");
+            }
+        };
+        letterTimer.start();
+    }
 
-    public void cancelTimer() {
+
+    public void cancelLetterTimer() {
         if(letterTimer!=null)
             letterTimer.cancel();
     }

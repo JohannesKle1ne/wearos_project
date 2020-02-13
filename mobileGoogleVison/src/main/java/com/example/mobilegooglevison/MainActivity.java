@@ -37,11 +37,15 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks {
 
-    TextView outputView;
+    TextView receivedView;
+    TextView resultView;
     ImageView imageView;
     private GoogleApiClient client;
     private List<Node> connectedNode;
     private static final String TAG = "PHONE_MAIN";
+    private static final String RESULT_VIEW_DEFAULT = "Result: ";
+    private static final String RECEIVED_VIEW_DEFAULT = "Received: ";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +53,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         getSupportActionBar().hide();
 
         setContentView(R.layout.activity_main);
-        outputView = findViewById(R.id.output);
+        receivedView = findViewById(R.id.output);
+        resultView = findViewById(R.id.recognized);
         imageView = findViewById(R.id.image);
 
 
@@ -61,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         client.connect();
     }
 
-    public void getTextFromImage(Bitmap bm){
+    public void makeTextFromImage(Bitmap bm){
 
         //other branch
         imageView.setImageBitmap(bm);
@@ -84,8 +89,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             }
             String result = sb.toString();
             //used when word is concatinated at phone
-            //outputView.setText(outputView.getText().toString()+sb.toString());
-            outputView.setText("Received: "+sb.toString());
+            //receivedView.setText(receivedView.getText().toString()+sb.toString());
+            resultView.setText(RESULT_VIEW_DEFAULT +sb.toString());
 
             if(!result.isEmpty()){
                 sendMessage(MessageDict.ACK);
@@ -116,7 +121,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 byte[] bytes = messageEvent.getData();
 
                 handleMessage(bytes);
-                //Log.i("Received message", new String(bytes));
             }
         });
         Log.i("Phone client connected", String.valueOf(client.isConnected()));
@@ -132,12 +136,18 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
         switch(message){
             case (MessageDict.SPACE):
-                outputView.setText(outputView.getText().toString()+" ");
+                receivedView.setText(RECEIVED_VIEW_DEFAULT +"-SPACE-");
                 sendMessage(MessageDict.ACK);
                 break;
+            case (MessageDict.EMPTY):
+                receivedView.setText(RECEIVED_VIEW_DEFAULT +"-Empty-");
+                imageView.setImageResource(0);
+                resultView.setText(RESULT_VIEW_DEFAULT);
+                break;
             default:
+                receivedView.setText(RECEIVED_VIEW_DEFAULT +"-Bitmap-");
                 Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                getTextFromImage(bmp);
+                makeTextFromImage(bmp);
         }
     }
 
