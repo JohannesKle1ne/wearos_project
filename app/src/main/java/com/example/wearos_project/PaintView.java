@@ -107,6 +107,18 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
 
     }
 
+    public void touchDown(){
+        if(mainActivity.isWaitingForDoubleTap()){
+            mainActivity.getTextbuilder().addSpace();
+            mainActivity.vibrate();
+            doubleTapped = true;
+            mainActivity.cancelLetterTimer();
+        }else{
+            mainActivity.startDoubleTapTimer();
+        }
+
+    }
+
     private void touchStart (float x, float y) {
 
         currentPath = new Path();
@@ -139,11 +151,11 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
 
     private void touchUp () {
 
-        if(!doubleTapped){
-            mainActivity.startLetterTimer();
-        }else{
+        if(doubleTapped){
             clear();
             doubleTapped = false;
+        }else{
+            mainActivity.startLetterTimer();
         }
 
         currentPath.lineTo(mX, mY);
@@ -161,7 +173,9 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
         switch (event.getAction()) {
 
             case MotionEvent.ACTION_DOWN:
+                Log.d(TAG, "actionDown");
                 touchStart(x, y);
+                touchDown();
                 invalidate();
                 mainActivity.cancelLetterTimer();
                 break;
@@ -240,26 +254,26 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
 
     @Override
     public boolean onSingleTapConfirmed(MotionEvent e) {
-        Log.d(TAG, "onSingleTapConfirmed");
+        //Log.d(TAG, "onSingleTapConfirmed");
 
         return false;
     }
 
     @Override
     public boolean onDoubleTap(MotionEvent e) {
-        Log.d(TAG, "double tap");
+        /*Log.d(TAG, "double tap");
         //mainActivity.sendSpace();
         mainActivity.getTextbuilder().addSpace();
         mainActivity.vibrate();
         doubleTapped = true;
-        mainActivity.cancelLetterTimer();
+        mainActivity.cancelLetterTimer();*/
         return false;
     }
 
     @Override
     public boolean onDoubleTapEvent(MotionEvent e) {
         mainActivity.cancelLetterTimer();
-        Log.d(TAG, "double tap event");
+        //Log.d(TAG, "double tap event");
         return false;
     }
 
@@ -275,7 +289,7 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
 
     @Override
     public boolean onSingleTapUp(MotionEvent e) {
-        Log.d(TAG, "onSingleTapUp");
+        //Log.d(TAG, "onSingleTapUp");
         return false;
     }
 

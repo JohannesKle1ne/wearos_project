@@ -38,9 +38,11 @@ public class MainActivity extends WearableActivity implements
     private PaintView paintView;
     private GoogleApiClient client;
     private List<Node> connectedNode;
-    private CountDownTimer letterTimer;
+    private CountDownTimer letterAndResetTimer;
+    private CountDownTimer doubleTapTimer;
     private static final String TAG = "WATCH_MAIN";
     private boolean waitingForReset = false;
+    private boolean waitingForDoubleTap = false;
 
     private TextBuilder textbuilder;
 
@@ -162,10 +164,10 @@ public class MainActivity extends WearableActivity implements
 
 
     public void startLetterTimer() {
-        if(letterTimer!=null) {
-            letterTimer.cancel();
+        if(letterAndResetTimer !=null) {
+            letterAndResetTimer.cancel();
         }
-        letterTimer = new CountDownTimer(400, 100) {
+        letterAndResetTimer = new CountDownTimer(400, 100) {
             public void onTick(long millisUntilFinished) {
             }
             public void onFinish() {
@@ -176,15 +178,15 @@ public class MainActivity extends WearableActivity implements
                 paintView.clear();
             }
         };
-        letterTimer.start();
+        letterAndResetTimer.start();
     }
 
     public void startResetTimer() {
-        if(letterTimer!=null) {
-            letterTimer.cancel();
+        if(letterAndResetTimer !=null) {
+            letterAndResetTimer.cancel();
         }
         waitingForReset = true;
-        letterTimer = new CountDownTimer(200, 100) {
+        letterAndResetTimer = new CountDownTimer(200, 100) {
             public void onTick(long millisUntilFinished) {
             }
             public void onFinish() {
@@ -192,17 +194,43 @@ public class MainActivity extends WearableActivity implements
                 Log.i("onFinish","done!");
             }
         };
-        letterTimer.start();
+        letterAndResetTimer.start();
+    }
+
+    public void startDoubleTapTimer() {
+        if(doubleTapTimer!=null) {
+            doubleTapTimer.cancel();
+        }
+        waitingForDoubleTap = true;
+        doubleTapTimer = new CountDownTimer(200, 100) {
+            public void onTick(long millisUntilFinished) {
+            }
+            public void onFinish() {
+                waitingForDoubleTap = false;
+                Log.i("onFinish","done!");
+            }
+        };
+        doubleTapTimer.start();
     }
 
 
     public void cancelLetterTimer() {
-        if(letterTimer!=null)
-            letterTimer.cancel();
+        if(letterAndResetTimer !=null)
+            letterAndResetTimer.cancel();
     }
+
+    public void cancelDoubleTapTimer() {
+        if(doubleTapTimer!=null)
+            doubleTapTimer.cancel();
+    }
+
 
     public TextBuilder getTextbuilder() {
         return textbuilder;
+    }
+
+    public boolean isWaitingForDoubleTap(){
+        return waitingForDoubleTap;
     }
 
 

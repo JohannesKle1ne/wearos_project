@@ -8,8 +8,8 @@ import android.util.Log;
 public class TextBuilder {
     private Bitmap resultBitmap;
     private final static String TAG = "TextBuilder";
-    private int lastLetterWidth;
-    private int lastLetterHeight;
+    private int lastLetterWidth = 296;
+    private int lastLetterHeight = 416;
 
 
     public void addLetter(Bitmap bm) {
