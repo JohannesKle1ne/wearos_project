@@ -25,9 +25,13 @@ import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -35,6 +39,9 @@ public class MainActivity extends WearableActivity implements
         GoogleApiClient.ConnectionCallbacks{
 
 
+    private ArrayList<WatchLogger> watchLoggers;
+    private WatchLogger currentLogger;
+    private Vibrator vibrator;
     private PaintView paintView;
     private GoogleApiClient client;
     private List<Node> connectedNode;
@@ -54,6 +61,8 @@ public class MainActivity extends WearableActivity implements
 
         paintView = findViewById(R.id.paintView);
         textbuilder = new TextBuilder();
+        vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+        watchLoggers = new ArrayList<>();
 
         DisplayMetrics displayMetrics = new DisplayMetrics();
 
@@ -106,16 +115,36 @@ public class MainActivity extends WearableActivity implements
             public void onMessageReceived(@NonNull MessageEvent messageEvent) {
                 String message = new String(messageEvent.getData());
                 Log.i("Received message", message);
-                handleMessage(message);
+                try {
+                    handleMessage(message);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
         });
 
     }
 
-    private void handleMessage(String message) {
-        switch(message){
+    public void startUserSession(int userId){
+        currentLogger = new WatchLogger(userId);
+        watchLoggers.add(currentLogger);
+        Log.i(TAG, "watchloggers count: "+watchLoggers.size());
+    }
+
+
+
+    private void handleMessage(String message) throws JSONException {
+        JSONObject messageObject = new JSONObject(message);
+        String messageType = messageObject.getString(MessageDict.MESSAGE_TYPE);
+        switch(messageType){
             case (MessageDict.ACK):
                 vibrate();
+                break;
+            case (MessageDict.USER):
+                int userID = messageObject.getJSONObject(MessageDict.MESSAGE)
+                        .getInt(MessageDict.USER);
+                startUserSession(userID);
+                vibrateLong();
                 break;
             default:
                 Toast.makeText(this, "received unknown message", Toast.LENGTH_SHORT).show();
@@ -158,8 +187,10 @@ public class MainActivity extends WearableActivity implements
 
 
     public void vibrate(){
-        Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
         vibrator.vibrate(VibrationEffect.createOneShot(100,VibrationEffect.DEFAULT_AMPLITUDE));
+    }
+    public void vibrateLong(){
+        vibrator.vibrate(VibrationEffect.createOneShot(500,VibrationEffect.DEFAULT_AMPLITUDE));
     }
 
 
@@ -225,7 +256,7 @@ public class MainActivity extends WearableActivity implements
     }
 
 
-    public TextBuilder getTextbuilder() {
+    public TextBuilder getTextBuilder() {
         return textbuilder;
     }
 

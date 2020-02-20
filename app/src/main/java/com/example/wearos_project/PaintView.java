@@ -109,7 +109,7 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
 
     public void touchDown(){
         if(mainActivity.isWaitingForDoubleTap()){
-            mainActivity.getTextbuilder().addSpace();
+            mainActivity.getTextBuilder().addSpace();
             mainActivity.vibrate();
             doubleTapped = true;
             mainActivity.cancelLetterTimer();

@@ -3,6 +3,7 @@ package com.example.wearos_project;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.os.SystemClock;
 import android.util.Log;
 
 public class TextBuilder {
@@ -13,6 +14,9 @@ public class TextBuilder {
 
 
     public void addLetter(Bitmap bm) {
+        //Log.i(TAG,String.valueOf(SystemClock.uptimeMillis()));
+        Log.i(TAG,String.valueOf(SystemClock.elapsedRealtime()/1000));
+
         Bitmap bitmap = applyCrop(bm, 60,0,60,0);
         if(resultBitmap==null){
             resultBitmap = bitmap.copy(Bitmap.Config.ARGB_8888,true);

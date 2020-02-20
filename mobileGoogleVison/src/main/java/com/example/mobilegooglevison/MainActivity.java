@@ -11,9 +11,13 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.os.Bundle;
 
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.util.SparseArray;
 
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -31,6 +35,10 @@ import com.google.android.gms.vision.text.TextBlock;
 import com.google.android.gms.vision.text.TextRecognizer;
 import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
+import com.google.gson.Gson;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.List;
 
@@ -39,7 +47,12 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     TextView receivedView;
     TextView resultView;
+    TextView userId;
+    LogView logView;
     ImageView imageView;
+    Button startUserSession;
+    EditText idInput;
+
     private GoogleApiClient client;
     private List<Node> connectedNode;
     private static final String TAG = "PHONE_MAIN";
@@ -53,8 +66,15 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         getSupportActionBar().hide();
 
         setContentView(R.layout.activity_main);
+        logView = findViewById(R.id.log);
+        logView.setMovementMethod(new ScrollingMovementMethod());
+        userId = findViewById(R.id.userId);
+        idInput = findViewById(R.id.idInput);
+        startUserSession = findViewById(R.id.button);
         receivedView = findViewById(R.id.output);
         resultView = findViewById(R.id.recognized);
+        receivedView.setVisibility(View.GONE);
+        resultView.setVisibility(View.GONE);
         imageView = findViewById(R.id.image);
 
 
@@ -136,26 +156,50 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
         switch(message){
             case (MessageDict.SPACE):
-                receivedView.setText(RECEIVED_VIEW_DEFAULT +"-SPACE-");
+                //receivedView.setText(RECEIVED_VIEW_DEFAULT +"-SPACE-");
+                logView.addLine(RECEIVED_VIEW_DEFAULT +"-SPACE-");
                 sendMessage(MessageDict.ACK);
                 break;
             case (MessageDict.EMPTY):
-                receivedView.setText(RECEIVED_VIEW_DEFAULT +"-Empty-");
+                //receivedView.setText(RECEIVED_VIEW_DEFAULT +"-Empty-");
+                logView.addLine(RECEIVED_VIEW_DEFAULT+"-EMPTY-");
                 imageView.setImageResource(0);
                 resultView.setText(RESULT_VIEW_DEFAULT);
                 break;
             default:
-                receivedView.setText(RECEIVED_VIEW_DEFAULT +"-Bitmap-");
+                //receivedView.setText(RECEIVED_VIEW_DEFAULT +"-Bitmap-");
+                logView.addLine(RECEIVED_VIEW_DEFAULT+"-BITMAP-");
                 Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                 makeTextFromImage(bmp);
         }
+    }
+
+    public void sendUserInformation(View v){
+        String id = idInput.getText().toString();
+        if(id!= null && !id.isEmpty()) {
+            try {
+                String jsonString = new JSONObject()
+                        .put(MessageDict.MESSAGE_TYPE,MessageDict.USER)
+                        .put(MessageDict.MESSAGE,new JSONObject()
+                                .put(MessageDict.USER,id))
+                        .toString();
+                sendMessage(jsonString);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            userId.setText(idInput.getText());
+            idInput.getText().clear();
+        }else{
+            Log.i(TAG, "id input Field is empty!");
+        }
+
     }
 
     public void sendMessage(String message) {
         for (int i = 0; i < connectedNode.size(); i++) {
             byte[] bytes = message.getBytes();
             Wearable.MessageApi.sendMessage(client, connectedNode.get(i).getId(), "/meal", bytes);
-            Log.i("MessageDict sent", message);
+            Log.i("Message sent", message);
         }
     }
 }
