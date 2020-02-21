@@ -3,15 +3,21 @@ package com.example.mobilegooglevison;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 
+import android.Manifest;
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.os.Bundle;
 
+import android.os.Environment;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Base64;
 import android.util.Log;
 import android.util.SparseArray;
 
@@ -36,10 +42,16 @@ import com.google.android.gms.vision.text.TextRecognizer;
 import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
 
 
@@ -139,8 +151,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             @Override
             public void onMessageReceived(@NonNull MessageEvent messageEvent) {
                 byte[] bytes = messageEvent.getData();
-
-                handleMessage(bytes);
+                try {
+                    handleMessage(bytes);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
         });
         Log.i("Phone client connected", String.valueOf(client.isConnected()));
@@ -151,7 +166,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         connectedNode = null;
     }
 
-    private void handleMessage(byte[] bytes) {
+    private void handleMessage(byte[] bytes) throws JSONException {
         String message = new String(bytes);
 
         switch(message){
@@ -167,11 +182,112 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 resultView.setText(RESULT_VIEW_DEFAULT);
                 break;
             default:
-                //receivedView.setText(RECEIVED_VIEW_DEFAULT +"-Bitmap-");
-                logView.addLine(RECEIVED_VIEW_DEFAULT+"-BITMAP-");
-                Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                makeTextFromImage(bmp);
+                String type = new JSONObject(message).getString(MessageDict.MESSAGE_TYPE);
+                if(type.equals(MessageDict.LOG)){
+                    String log = new JSONObject(message).getJSONObject(MessageDict.MESSAGE)
+                            .getString(MessageDict.LOG);
+
+                    if (!log.isEmpty()) {
+
+                        if(checkPersmission(Manifest.permission.WRITE_EXTERNAL_STORAGE)){
+                            Log.i(TAG,"permission granted!");
+                            saveLog(log);
+
+                        }else {
+
+                            File textFile = new File(Environment.
+                                    getExternalStoragePublicDirectory(Environment
+                                            .DIRECTORY_DOWNLOADS), "name");
+                            FileOutputStream fos = null;
+                            try {
+                                fos = new FileOutputStream(textFile);
+                                fos.write(log.getBytes());
+                                Log.i(TAG, Environment.
+                                        getExternalStoragePublicDirectory(Environment
+                                                .DIRECTORY_DOWNLOADS).toString());
+                            } catch (FileNotFoundException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            } finally {
+                                if (fos != null) {
+                                    try {
+                                        fos.close();
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                } else {
+                    //receivedView.setText(RECEIVED_VIEW_DEFAULT +"-Bitmap-");
+                    String bitmap = new JSONObject(message).getJSONObject(MessageDict.MESSAGE)
+                            .getString(MessageDict.BITMAP);
+                    byte [] encodeByte= Base64.decode(bitmap,Base64.DEFAULT);
+                    logView.addLine(RECEIVED_VIEW_DEFAULT + "-BITMAP-");
+                    Bitmap bmp = BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
+                    makeTextFromImage(bmp);
+                }
         }
+    }
+
+    private void saveLog(String log) {
+       /* int count = 0;
+
+        File sdDirectory = Environment.getExternalStorageDirectory();
+        File subDirectory = new File(sdDirectory.toString() + "/Pictures/Paint");
+
+        if (subDirectory.exists()) {
+
+            File[] existing = subDirectory.listFiles();
+
+            for (File file : existing) {
+
+                if (file.getName().endsWith(".jpg") || file.getName().endsWith(".png")) {
+
+                    count++;
+                }
+            }
+        } else {
+
+            subDirectory.mkdir();
+
+        }
+
+        if (subDirectory.exists()) {
+
+            File image = new File(subDirectory, "/drawing_" + (count + 1) + ".png");
+            FileOutputStream fileOutputStream;
+
+            try {
+
+                fileOutputStream = new FileOutputStream(image);
+
+                mBitmap.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream);
+
+                fileOutputStream.flush();
+                fileOutputStream.close();
+
+                Toast.makeText(getContext(), "saved", Toast.LENGTH_LONG).show();
+
+            } catch (FileNotFoundException e) {
+
+
+            } catch (IOException e) {
+
+
+            }
+
+        }
+*/
+
+    }
+
+    public boolean checkPersmission(String permission){
+        int check = ContextCompat.checkSelfPermission(this, permission);
+        return (check == PackageManager.PERMISSION_GRANTED);
     }
 
     public void sendUserInformation(View v){

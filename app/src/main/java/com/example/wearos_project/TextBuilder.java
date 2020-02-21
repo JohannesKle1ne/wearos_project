@@ -7,6 +7,8 @@ import android.os.SystemClock;
 import android.util.Log;
 
 public class TextBuilder {
+
+    private WatchLogger logger;
     private Bitmap resultBitmap;
     private final static String TAG = "TextBuilder";
     private int lastLetterWidth = 296;
@@ -15,7 +17,7 @@ public class TextBuilder {
 
     public void addLetter(Bitmap bm) {
         //Log.i(TAG,String.valueOf(SystemClock.uptimeMillis()));
-        Log.i(TAG,String.valueOf(SystemClock.elapsedRealtime()/1000));
+        //Log.i(TAG,String.valueOf(SystemClock.elapsedRealtime()/1000));
 
         Bitmap bitmap = applyCrop(bm, 60,0,60,0);
         if(resultBitmap==null){
@@ -26,16 +28,21 @@ public class TextBuilder {
         }
         lastLetterWidth = bitmap.getWidth();
         lastLetterHeight = bitmap.getHeight();
+        logger.log(WatchLogger.LETTER);
     }
 
     public void removeLetter(){
-        resultBitmap = applyCrop(resultBitmap,0,0, lastLetterWidth,0);
+        if(resultBitmap!=null){
+            resultBitmap = applyCrop(resultBitmap,0,0, lastLetterWidth,0);
+            logger.log(WatchLogger.REMOVE);
+        }
     }
 
 
 
     public Bitmap applyCrop(Bitmap bitmap, int leftCrop, int topCrop, int rightCrop, int bottomCrop) {
         if(bitmap==null){
+            Log.i(TAG, "can't crop empty bitmap");
             return bitmap;
         }
         int cropWidth = bitmap.getWidth() - rightCrop - leftCrop;
@@ -59,6 +66,7 @@ public class TextBuilder {
         }else{
             resultBitmap = combineImages(resultBitmap,blackBitmap);
         }
+        logger.log(WatchLogger.SPACE);
     }
 
 
@@ -87,12 +95,16 @@ public class TextBuilder {
 
     public void resetResult(){
         resultBitmap=null;
+        logger.log(WatchLogger.RESET);
     }
 
     public Bitmap getResult(){
         return resultBitmap;
     }
 
+    public void setLogger(WatchLogger logger) {
+        this.logger = logger;
+    }
 
 
 }

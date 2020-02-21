@@ -47,6 +47,8 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
 
 
 
+
+
     public PaintView(Context context) {
 
         super(context, null);
@@ -70,6 +72,7 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
 
         gestureDetector = new GestureDetector(context, this);
         doubleTapped =  false;
+
 
 
     }
@@ -164,37 +167,41 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if(mainActivity.isUserSessionRunning()) {
 
-        float x = event.getX();
-        float y = event.getY();
+            float x = event.getX();
+            float y = event.getY();
 
-        gestureDetector.onTouchEvent(event);
+            gestureDetector.onTouchEvent(event);
 
-        switch (event.getAction()) {
+            switch (event.getAction()) {
 
-            case MotionEvent.ACTION_DOWN:
-                Log.d(TAG, "actionDown");
-                touchStart(x, y);
-                touchDown();
-                invalidate();
-                mainActivity.cancelLetterTimer();
-                break;
-            case MotionEvent.ACTION_UP:
-                Log.d(TAG, "actionUp");
-                touchUp();
-                invalidate();
-                break;
-            case MotionEvent.ACTION_POINTER_DOWN:
-                break;
-            case MotionEvent.ACTION_MOVE:
-                touchMove(x, y);
-                invalidate();
-                break;
+                case MotionEvent.ACTION_DOWN:
+                    Log.d(TAG, "actionDown");
+                    touchStart(x, y);
+                    touchDown();
+                    invalidate();
+                    mainActivity.cancelLetterTimer();
+                    break;
+                case MotionEvent.ACTION_UP:
+                    Log.d(TAG, "actionUp");
+                    touchUp();
+                    invalidate();
+                    break;
+                case MotionEvent.ACTION_POINTER_DOWN:
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    touchMove(x, y);
+                    invalidate();
+                    break;
 
+            }
+            return true;
+
+        }else{
+            Toast.makeText(getContext(), "no user session started", Toast.LENGTH_SHORT).show();
+            return false;
         }
-
-        return true;
-
     }
 
     public void clear () {
@@ -248,8 +255,6 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
 
 
 
-
-
     //Touch functions
 
     @Override
@@ -272,7 +277,7 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
 
     @Override
     public boolean onDoubleTapEvent(MotionEvent e) {
-        mainActivity.cancelLetterTimer();
+        //mainActivity.cancelLetterTimer();
         //Log.d(TAG, "double tap event");
         return false;
     }

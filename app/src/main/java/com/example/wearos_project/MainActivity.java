@@ -6,6 +6,7 @@ import android.os.CountDownTimer;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.support.wearable.activity.WearableActivity;
+import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
@@ -51,6 +52,8 @@ public class MainActivity extends WearableActivity implements
     private boolean waitingForReset = false;
     private boolean waitingForDoubleTap = false;
 
+    private boolean userSessionRunning = false;
+
     private TextBuilder textbuilder;
 
 
@@ -81,20 +84,33 @@ public class MainActivity extends WearableActivity implements
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (event.getRepeatCount() == 0) {
-            if (keyCode == KeyEvent.KEYCODE_STEM_1) {
-                if (waitingForReset){
-                    textbuilder.resetResult();
-                    waitingForReset = false;
-                    Log.i(TAG, "RESET");
-                }else{
-                    textbuilder.removeLetter();
-                    startResetTimer();
-                    Log.i(TAG, "REMOVE");
+            if (userSessionRunning) {
+                if (keyCode == KeyEvent.KEYCODE_STEM_1) {
+                    if (waitingForReset) {
+                        textbuilder.resetResult();
+                        waitingForReset = false;
+                        Log.i(TAG, "RESET");
+                    } else {
+                        textbuilder.removeLetter();
+                        startResetTimer();
+                        Log.i(TAG, "REMOVE");
+                    }
+                    return true;
+                } else if (keyCode == KeyEvent.KEYCODE_STEM_2) {
+                    try {
+                        sendBitmap(textbuilder.getResult());
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        sendLog();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    return true;
                 }
-                return true;
-            } else if (keyCode == KeyEvent.KEYCODE_STEM_2) {
-                sendBitmap(textbuilder.getResult());
-                return true;
+            } else {
+                Toast.makeText(this, "no user session started", Toast.LENGTH_SHORT).show();
             }
         }
         return super.onKeyDown(keyCode, event);
@@ -128,7 +144,10 @@ public class MainActivity extends WearableActivity implements
     public void startUserSession(int userId){
         currentLogger = new WatchLogger(userId);
         watchLoggers.add(currentLogger);
-        Log.i(TAG, "watchloggers count: "+watchLoggers.size());
+        textbuilder.setLogger(currentLogger);
+        //Log.i(TAG, "watchloggers count: "+watchLoggers.size());
+        userSessionRunning = true;
+        Toast.makeText(this, "user session started", Toast.LENGTH_SHORT).show();
     }
 
 
@@ -161,7 +180,7 @@ public class MainActivity extends WearableActivity implements
         send(MessageDict.SPACE.getBytes());
     }
 
-    public void sendBitmap(Bitmap bitmap){
+    public void sendBitmap(Bitmap bitmap) throws JSONException {
         if(bitmap==null){
             Log.i(TAG, "send Error! item to send is null");
             send(MessageDict.EMPTY.getBytes());
@@ -169,13 +188,32 @@ public class MainActivity extends WearableActivity implements
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
             byte[] byteArray = stream.toByteArray();
+            String bmString = Base64.encodeToString(byteArray, Base64.DEFAULT);
+            String jsonString = new JSONObject()
+                    .put(MessageDict.MESSAGE_TYPE,MessageDict.BITMAP)
+                    .put(MessageDict.MESSAGE,new JSONObject()
+                            .put(MessageDict.BITMAP,bmString))
+                    .toString();
             try {
                 stream.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            send(byteArray);
+            send(jsonString.getBytes());
         }
+    }
+
+    public void sendLog() throws JSONException {
+        String logs = "";
+        for(int i= 0; i<currentLogger.getLogs().size();i++){
+            logs = logs+currentLogger.getLogs().get(i)+"\n";
+        }
+        String jsonString = new JSONObject()
+                .put(MessageDict.MESSAGE_TYPE,MessageDict.LOG)
+                .put(MessageDict.MESSAGE,new JSONObject()
+                        .put(MessageDict.LOG,logs))
+                .toString();
+        send(jsonString.getBytes());
     }
 
     public void send(byte[] byteArray){
@@ -264,5 +302,8 @@ public class MainActivity extends WearableActivity implements
         return waitingForDoubleTap;
     }
 
+    public boolean isUserSessionRunning() {
+        return userSessionRunning;
+    }
 
 }
