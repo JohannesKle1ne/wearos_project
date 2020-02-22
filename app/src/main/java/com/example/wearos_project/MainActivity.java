@@ -26,6 +26,7 @@ import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -33,14 +34,16 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class MainActivity extends WearableActivity implements
         GoogleApiClient.ConnectionCallbacks{
 
 
-    private ArrayList<WatchLogger> watchLoggers;
+    private HashMap<Integer,WatchLogger> watchLoggers;
     private WatchLogger currentLogger;
     private Vibrator vibrator;
     private PaintView paintView;
@@ -65,7 +68,7 @@ public class MainActivity extends WearableActivity implements
         paintView = findViewById(R.id.paintView);
         textbuilder = new TextBuilder();
         vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
-        watchLoggers = new ArrayList<>();
+        watchLoggers = new HashMap();
 
         DisplayMetrics displayMetrics = new DisplayMetrics();
 
@@ -99,11 +102,6 @@ public class MainActivity extends WearableActivity implements
                 } else if (keyCode == KeyEvent.KEYCODE_STEM_2) {
                     try {
                         sendBitmap(textbuilder.getResult());
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                    try {
-                        sendLog();
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -142,12 +140,16 @@ public class MainActivity extends WearableActivity implements
     }
 
     public void startUserSession(int userId){
-        currentLogger = new WatchLogger(userId);
-        watchLoggers.add(currentLogger);
+        if(watchLoggers.containsKey(userId)){
+            currentLogger = watchLoggers.get(userId);
+            Toast.makeText(this, "user session reactivated", Toast.LENGTH_SHORT).show();
+        } else {
+            currentLogger = new WatchLogger(userId);
+            watchLoggers.put(userId, currentLogger);
+            Toast.makeText(this, "user session started", Toast.LENGTH_SHORT).show();
+        }
         textbuilder.setLogger(currentLogger);
-        //Log.i(TAG, "watchloggers count: "+watchLoggers.size());
         userSessionRunning = true;
-        Toast.makeText(this, "user session started", Toast.LENGTH_SHORT).show();
     }
 
 
@@ -161,9 +163,12 @@ public class MainActivity extends WearableActivity implements
                 break;
             case (MessageDict.USER):
                 int userID = messageObject.getJSONObject(MessageDict.MESSAGE)
-                        .getInt(MessageDict.USER);
+                        .getJSONObject(MessageDict.USER).getInt(MessageDict.ID);
                 startUserSession(userID);
                 vibrateLong();
+                break;
+            case(MessageDict.LOG_REQUEST):
+                sendLogs();
                 break;
             default:
                 Toast.makeText(this, "received unknown message", Toast.LENGTH_SHORT).show();
@@ -181,39 +186,47 @@ public class MainActivity extends WearableActivity implements
     }
 
     public void sendBitmap(Bitmap bitmap) throws JSONException {
+        JSONObject json = new JSONObject()
+                .put(MessageDict.MESSAGE_TYPE,MessageDict.BITMAP)
+                .put(MessageDict.MESSAGE,new JSONObject());
         if(bitmap==null){
-            Log.i(TAG, "send Error! item to send is null");
-            send(MessageDict.EMPTY.getBytes());
+            json.getJSONObject(MessageDict.MESSAGE)
+                    .put(MessageDict.BITMAP,MessageDict.EMPTY).toString();
+            send(json.toString().getBytes());
         }else {
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
             byte[] byteArray = stream.toByteArray();
             String bmString = Base64.encodeToString(byteArray, Base64.DEFAULT);
-            String jsonString = new JSONObject()
-                    .put(MessageDict.MESSAGE_TYPE,MessageDict.BITMAP)
-                    .put(MessageDict.MESSAGE,new JSONObject()
-                            .put(MessageDict.BITMAP,bmString))
-                    .toString();
+
+            json.getJSONObject(MessageDict.MESSAGE)
+                    .put(MessageDict.BITMAP,bmString).toString();
             try {
                 stream.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            send(jsonString.getBytes());
+            send(json.toString().getBytes());
         }
     }
 
-    public void sendLog() throws JSONException {
-        String logs = "";
-        for(int i= 0; i<currentLogger.getLogs().size();i++){
-            logs = logs+currentLogger.getLogs().get(i)+"\n";
+    public void sendLogs() throws JSONException {
+        JSONObject jsonObject = new JSONObject()
+                .put(MessageDict.MESSAGE_TYPE, MessageDict.LOG)
+                .put(MessageDict.MESSAGE, new JSONArray());
+        JSONArray logArray = jsonObject.getJSONArray(MessageDict.MESSAGE);
+
+        for (Map.Entry<Integer, WatchLogger> entry : watchLoggers.entrySet()) {
+
+            String logs = entry.getValue().getLogs();
+            logArray.put(
+                    new JSONObject()
+                            .put(MessageDict.USER, new JSONObject()
+                                    .put(MessageDict.ID, entry.getValue().getId()))
+                            .put(MessageDict.LOG, logs));
+
         }
-        String jsonString = new JSONObject()
-                .put(MessageDict.MESSAGE_TYPE,MessageDict.LOG)
-                .put(MessageDict.MESSAGE,new JSONObject()
-                        .put(MessageDict.LOG,logs))
-                .toString();
-        send(jsonString.getBytes());
+        send(jsonObject.toString().getBytes());
     }
 
     public void send(byte[] byteArray){

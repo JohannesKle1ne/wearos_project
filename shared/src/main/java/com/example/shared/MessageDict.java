@@ -9,7 +9,7 @@ public class MessageDict {
     public static final String MESSAGE = "message";
     public static final String LOG = "log";
     public static final String BITMAP = "bitmap";
-
-
+    public static final String ID = "id";
+    public static final String LOG_REQUEST = "log_request";
 
 }

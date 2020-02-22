@@ -22,6 +22,7 @@
         android:id="@+id/userId"
         android:layout_width="76dp"
         android:layout_height="31dp"
+        android:layout_marginStart="10dp"
         android:textSize="20dp"
         app:layout_constraintBottom_toTopOf="@+id/image"
         app:layout_constraintEnd_toStartOf="@+id/button"
@@ -52,19 +53,40 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <Button
+        android:id="@+id/getWatchLogs"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="40dp"
+        android:text="get Watch Logs"
+        android:textSize="10dp"
+        android:onClick="requestWatchLogs"
+        app:layout_constraintBottom_toTopOf="@+id/log"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/image" />
+
+    <TextView
+        android:id="@+id/watchLogCount"
+        android:layout_width="164dp"
+        android:layout_height="29dp"
+        android:layout_marginEnd="10dp"
+        android:textSize="20dp"
+        app:layout_constraintBottom_toTopOf="@+id/log"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/getWatchLogs"
+        app:layout_constraintTop_toBottomOf="@+id/image" />
+
     <com.example.mobilegooglevison.LogView
         android:id="@+id/log"
-        android:layout_width="315dp"
-        android:layout_height="330dp"
+        android:layout_width="296dp"
+        android:layout_height="232dp"
         android:layout_marginStart="32dp"
-        android:layout_marginTop="10dp"
         android:layout_marginBottom="30dp"
         android:scrollbars="vertical"
         android:text="Log: "
         android:textSize="15dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/image" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
         android:id="@+id/output"

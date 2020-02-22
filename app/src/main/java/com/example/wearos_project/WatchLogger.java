@@ -14,6 +14,7 @@ public class WatchLogger {
 
 
     private final String TAG = "WatchLogger";
+
     private int id;
 
     private ArrayList<String> logs;
@@ -46,8 +47,16 @@ public class WatchLogger {
         }
     }
 
-    public ArrayList<String> getLogs() {
-        return logs;
+    public String getLogs() {
+        String fullString = "";
+        for(int i= 0; i<logs.size();i++) {
+            fullString = fullString + logs.get(i) + "\n";
+        }
+        return fullString;
+    }
+
+    public int getId() {
+        return id;
     }
 
 
