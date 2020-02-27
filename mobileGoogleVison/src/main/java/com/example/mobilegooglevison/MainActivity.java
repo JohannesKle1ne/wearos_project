@@ -132,10 +132,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             //used when word is concatinated at phone
             //receivedView.setText(receivedView.getText().toString()+sb.toString());
             resultView.setText(RESULT_VIEW_DEFAULT +sb.toString());
-
-            if(!result.isEmpty()){
-                sendMessage(MessageDict.ACK);
-            }
         }
     }
 
@@ -193,30 +189,44 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     logView.addLine(RECEIVED_VIEW_DEFAULT + "-BITMAP-");
                     Bitmap bmp = BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
                     makeTextFromImage(bmp);
+
+                    if(saveBitmap(bmp)){
+                        String jsonString = new JSONObject()
+                                .put(MessageDict.MESSAGE_TYPE, MessageDict.ACK)
+                                .put(MessageDict.MESSAGE, MessageDict.BITMAP_SAVED)
+                                .toString();
+                        sendMessage(jsonString);
+                    }
                 }
                 break;
             case (MessageDict.LOG):
                 JSONArray messageArray = jsonObject.getJSONArray(MessageDict.MESSAGE);
+                boolean successfulSaved = true;
 
                 for (int i = 0; i < messageArray.length(); i++) {
                     JSONObject currentObject = messageArray.getJSONObject(i);
                     String log = currentObject.getString(MessageDict.LOG);
                     int loggerId = currentObject.getJSONObject(MessageDict.USER).getInt(MessageDict.ID);
-                    saveLog(log, loggerId);
+                    successfulSaved = saveLog(log, loggerId)&&successfulSaved;
                 }
-                watchLogCount.setText(messageArray.length()+" log files saved");
+                if(successfulSaved){
+                    watchLogCount.setText(messageArray.length()+" log files saved");
+                }else{
+                    watchLogCount.setText("SAVE ERROR");
+                }
+
                 break;
             default:
                 Log.i(TAG, "could not handle message");
         }
     }
 
-    private void saveLog(String log, int loggerId) {
+    private boolean saveLog(String log, int loggerId) {
         if (checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 && isExternalStorageWritable()) {
 
             File filePath = new File(Environment.getExternalStorageDirectory()
-                    .toString() + "/Logs");
+                    .toString() + "/#Logs");
             String fileName = Calendar.getInstance().getTime().toString()
                     .substring(4,19).replaceAll("\\s+","_")
                     .replaceAll(":","-")
@@ -225,31 +235,67 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             if (filePath.exists()) {
 
                 File textFile = new File(filePath, fileName);
-                FileOutputStream fos = null;
+                FileOutputStream fos;
 
                 try {
                     fos = new FileOutputStream(textFile);
                     fos.write(log.getBytes());
-                    Log.i(TAG, "Filename: "+fileName);
-                    Log.i(TAG, "File saved");
+                    fos.close();
+                    return true;
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
+                    return false;
                 } catch (IOException e) {
                     e.printStackTrace();
-                } finally {
-                    if (fos != null) {
-                        try {
-                            fos.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
+                    return false;
                 }
             } else {
                 Log.i(TAG, "directory does not exist");
+                return false;
             }
         } else {
             Log.i(TAG, "write permission not granted!");
+            return false;
+        }
+    }
+
+    public boolean saveBitmap(Bitmap bitmap){
+        if (checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                && isExternalStorageWritable()) {
+
+            File filePath = new File(Environment.getExternalStorageDirectory()
+                    .toString() + "/#Bitmaps");
+            String fileName = Calendar.getInstance().getTime().toString()
+                    .substring(4,19).replaceAll("\\s+","_")
+                    .replaceAll(":","-")
+                    +".png";
+
+            if (filePath.exists()) {
+
+                File bitmapFile = new File(filePath, fileName);
+                FileOutputStream fos;
+
+                try {
+                    fos = new FileOutputStream(bitmapFile);
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+
+                    fos.flush();
+                    fos.close();
+                    return true;
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                    return false;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            } else {
+                Log.i(TAG, "directory does not exist");
+                return false;
+            }
+        } else {
+            Log.i(TAG, "write permission not granted!");
+            return false;
         }
     }
 

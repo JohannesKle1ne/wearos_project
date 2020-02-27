@@ -89,6 +89,13 @@ public class MainActivity extends WearableActivity implements
         if (event.getRepeatCount() == 0) {
             if (userSessionRunning) {
                 if (keyCode == KeyEvent.KEYCODE_STEM_1) {
+                    try {
+                        sendBitmap(textbuilder.getResult());
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    return true;
+                } else if (keyCode == KeyEvent.KEYCODE_STEM_2) {
                     if (waitingForReset) {
                         textbuilder.resetResult();
                         waitingForReset = false;
@@ -97,13 +104,6 @@ public class MainActivity extends WearableActivity implements
                         textbuilder.removeLetter();
                         startResetTimer();
                         Log.i(TAG, "REMOVE");
-                    }
-                    return true;
-                } else if (keyCode == KeyEvent.KEYCODE_STEM_2) {
-                    try {
-                        sendBitmap(textbuilder.getResult());
-                    } catch (JSONException e) {
-                        e.printStackTrace();
                     }
                     return true;
                 }
@@ -159,7 +159,14 @@ public class MainActivity extends WearableActivity implements
         String messageType = messageObject.getString(MessageDict.MESSAGE_TYPE);
         switch(messageType){
             case (MessageDict.ACK):
-                vibrate();
+                String ackType = messageObject.getString(MessageDict.MESSAGE);
+                switch (ackType) {
+                    case (MessageDict.BITMAP_SAVED):
+                        textbuilder.resetResult();
+                        break;
+                    default:
+                        Toast.makeText(this, "received unknown ack type", Toast.LENGTH_SHORT).show();
+                }
                 break;
             case (MessageDict.USER):
                 int userID = messageObject.getJSONObject(MessageDict.MESSAGE)
@@ -238,10 +245,14 @@ public class MainActivity extends WearableActivity implements
 
 
     public void vibrate(){
-        vibrator.vibrate(VibrationEffect.createOneShot(100,VibrationEffect.DEFAULT_AMPLITUDE));
+        long milliseconds = 100;
+        int amplitude = 50;
+        vibrator.vibrate(VibrationEffect.createOneShot(milliseconds,amplitude));
     }
     public void vibrateLong(){
-        vibrator.vibrate(VibrationEffect.createOneShot(500,VibrationEffect.DEFAULT_AMPLITUDE));
+        long milliseconds = 500;
+        int amplitude = 50;
+        vibrator.vibrate(VibrationEffect.createOneShot(milliseconds,amplitude));
     }
 
 
