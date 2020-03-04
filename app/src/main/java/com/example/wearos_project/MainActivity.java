@@ -33,7 +33,6 @@ import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,12 +48,12 @@ public class MainActivity extends WearableActivity implements
     private PaintView paintView;
     private GoogleApiClient client;
     private List<Node> connectedNode;
-    private CountDownTimer letterAndResetTimer;
+    private CountDownTimer letterTimer;
     private CountDownTimer doubleTapTimer;
     private static final String TAG = "WATCH_MAIN";
-    private boolean waitingForReset = false;
     private boolean waitingForDoubleTap = false;
 
+    private boolean letterTimerRunning = false;
     private boolean userSessionRunning = false;
 
     private TextBuilder textbuilder;
@@ -90,21 +89,14 @@ public class MainActivity extends WearableActivity implements
             if (userSessionRunning) {
                 if (keyCode == KeyEvent.KEYCODE_STEM_1) {
                     try {
+                        abridgeLetterTimer();
                         sendBitmap(textbuilder.getResult());
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
                     return true;
                 } else if (keyCode == KeyEvent.KEYCODE_STEM_2) {
-                    if (waitingForReset) {
-                        textbuilder.resetResult();
-                        waitingForReset = false;
-                        Log.i(TAG, "RESET");
-                    } else {
-                        textbuilder.removeLetter();
-                        startResetTimer();
-                        Log.i(TAG, "REMOVE");
-                    }
+                    textbuilder.removeLetter();
                     return true;
                 }
             } else {
@@ -128,7 +120,7 @@ public class MainActivity extends WearableActivity implements
             @Override
             public void onMessageReceived(@NonNull MessageEvent messageEvent) {
                 String message = new String(messageEvent.getData());
-                Log.i("Received message", message);
+                Log.i("Received: ", message);
                 try {
                     handleMessage(message);
                 } catch (JSONException e) {
@@ -195,7 +187,9 @@ public class MainActivity extends WearableActivity implements
     public void sendBitmap(Bitmap bitmap) throws JSONException {
         JSONObject json = new JSONObject()
                 .put(MessageDict.MESSAGE_TYPE,MessageDict.BITMAP)
-                .put(MessageDict.MESSAGE,new JSONObject());
+                .put(MessageDict.MESSAGE,new JSONObject()
+                        .put(MessageDict.USER,new JSONObject()
+                                .put(MessageDict.ID,currentLogger.getId())));
         if(bitmap==null){
             json.getJSONObject(MessageDict.MESSAGE)
                     .put(MessageDict.BITMAP,MessageDict.EMPTY).toString();
@@ -213,6 +207,7 @@ public class MainActivity extends WearableActivity implements
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            Log.d(TAG,"sendBitmap Method");
             send(json.toString().getBytes());
         }
     }
@@ -239,7 +234,9 @@ public class MainActivity extends WearableActivity implements
     public void send(byte[] byteArray){
         for (int i = 0; i < connectedNode.size(); i++) {
             Wearable.MessageApi.sendMessage(client, connectedNode.get(i).getId(), "/meal", byteArray);
-            Log.i("MessageDict sent", "ByteArray");
+            Log.i("sent: ", new String(byteArray));
+            Log.d(TAG,""+i);
+
         }
     }
 
@@ -257,38 +254,33 @@ public class MainActivity extends WearableActivity implements
 
 
     public void startLetterTimer() {
-        if(letterAndResetTimer !=null) {
-            letterAndResetTimer.cancel();
+        if(letterTimer !=null) {
+            letterTimer.cancel();
         }
-        letterAndResetTimer = new CountDownTimer(400, 100) {
+        letterTimerRunning = true;
+        letterTimer = new CountDownTimer(400, 100) {
             public void onTick(long millisUntilFinished) {
             }
             public void onFinish() {
-                Log.i("onFinish","done!");
                 Bitmap bitmap = paintView.getBitmap();
                 textbuilder.addLetter(bitmap);
                 vibrate();
                 paintView.clear();
+                letterTimerRunning = false;
             }
         };
-        letterAndResetTimer.start();
+        letterTimer.start();
     }
 
-    public void startResetTimer() {
-        if(letterAndResetTimer !=null) {
-            letterAndResetTimer.cancel();
+    public void abridgeLetterTimer() {
+        if (letterTimerRunning) {
+            cancelLetterTimer();
+            Bitmap bitmap = paintView.getBitmap();
+            textbuilder.addLetter(bitmap);
+            paintView.clear();
         }
-        waitingForReset = true;
-        letterAndResetTimer = new CountDownTimer(200, 100) {
-            public void onTick(long millisUntilFinished) {
-            }
-            public void onFinish() {
-                waitingForReset =false;
-                Log.i("onFinish","done!");
-            }
-        };
-        letterAndResetTimer.start();
     }
+
 
     public void startDoubleTapTimer() {
         if(doubleTapTimer!=null) {
@@ -300,7 +292,6 @@ public class MainActivity extends WearableActivity implements
             }
             public void onFinish() {
                 waitingForDoubleTap = false;
-                Log.i("onFinish","done!");
             }
         };
         doubleTapTimer.start();
@@ -308,8 +299,10 @@ public class MainActivity extends WearableActivity implements
 
 
     public void cancelLetterTimer() {
-        if(letterAndResetTimer !=null)
-            letterAndResetTimer.cancel();
+        if(letterTimer !=null) {
+            letterTimerRunning = false;
+            letterTimer.cancel();
+        }
     }
 
     public void cancelDoubleTapTimer() {

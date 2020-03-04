@@ -172,7 +172,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     private void handleMessage(byte[] bytes) throws JSONException {
-        Log.i(TAG, "received message: "+new String(bytes));
+        Log.i(TAG, "received: "+new String(bytes));
         JSONObject jsonObject = new JSONObject(new String(bytes));
         String messageType = jsonObject.getString(MessageDict.MESSAGE_TYPE);
 
@@ -180,6 +180,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             case (MessageDict.BITMAP):
                 JSONObject messageObject = jsonObject.getJSONObject(MessageDict.MESSAGE);
                 String bitmap = messageObject.getString(MessageDict.BITMAP);
+                int userId = messageObject.getJSONObject(MessageDict.USER).getInt(MessageDict.ID);
                 if (bitmap.equals(MessageDict.EMPTY)) {
                     logView.addLine(RECEIVED_VIEW_DEFAULT + "-EMPTY-");
                     imageView.setImageResource(0);
@@ -190,7 +191,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     Bitmap bmp = BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
                     makeTextFromImage(bmp);
 
-                    if(saveBitmap(bmp)){
+                    if(saveBitmap(bmp, userId)){
                         String jsonString = new JSONObject()
                                 .put(MessageDict.MESSAGE_TYPE, MessageDict.ACK)
                                 .put(MessageDict.MESSAGE, MessageDict.BITMAP_SAVED)
@@ -259,7 +260,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
     }
 
-    public boolean saveBitmap(Bitmap bitmap){
+    public boolean saveBitmap(Bitmap bitmap, int userId){
         if (checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 && isExternalStorageWritable()) {
 
@@ -268,7 +269,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             String fileName = Calendar.getInstance().getTime().toString()
                     .substring(4,19).replaceAll("\\s+","_")
                     .replaceAll(":","-")
-                    +".png";
+                    +"_id:_"+userId+".png";
 
             if (filePath.exists()) {
 
@@ -349,7 +350,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         for (int i = 0; i < connectedNode.size(); i++) {
             byte[] bytes = message.getBytes();
             Wearable.MessageApi.sendMessage(client, connectedNode.get(i).getId(), "/meal", bytes);
-            Log.i("Message sent", message);
+            Log.i("sent: ", message);
         }
     }
 }

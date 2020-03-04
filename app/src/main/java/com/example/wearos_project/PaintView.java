@@ -88,22 +88,34 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
         blackBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         mCanvas = new Canvas(bitmap);
         blackCanvas = new Canvas(blackBitmap);
+        invalidate();
 
     }
 
-    @Override
+    private void updateBitmap(){
+        mCanvas.drawColor(Color.WHITE);
+        int i = 0;
+        for (Path path : paths) {
+            i++;
+            mCanvas.drawPath(path, paint);
+        }
+    }
 
+    @Override
     protected void onDraw(Canvas canvas) {
 
         canvas.save();
-        mCanvas.drawColor(Color.WHITE);
+        blackCanvas.drawColor(backgroundColor);
+        /*mCanvas.drawColor(Color.WHITE);
         blackCanvas.drawColor(backgroundColor);
 
+        int i = 0;
         for (Path path : paths) {
-
+            i++;
             mCanvas.drawPath(path, paint);
+            Log.d(TAG,"draw path "+i);
 
-        }
+        }*/
 
         canvas.drawBitmap(blackBitmap, 0, 0, mBitmapPaint); //change this to black to Hide
         canvas.restore();
@@ -112,17 +124,25 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
 
     public void touchDown(){
         if(mainActivity.isWaitingForDoubleTap()){
-            mainActivity.getTextBuilder().addSpace();
-            mainActivity.vibrate();
-            doubleTapped = true;
-            mainActivity.cancelLetterTimer();
+            handleDoubleTap();
         }else{
             mainActivity.startDoubleTapTimer();
         }
-
+        mainActivity.cancelLetterTimer(); //this is the normal letter delay reset
     }
 
-    private void touchStart (float x, float y) {
+    public void handleDoubleTap() {
+        Log.d(TAG,""+paths.size());
+        if (paths.size() > 2){
+            undo(2);
+            mainActivity.abridgeLetterTimer();
+        }
+        mainActivity.vibrate();
+        doubleTapped = true;
+        mainActivity.getTextBuilder().addSpace();
+    }
+
+    private void pathStart(float x, float y) {
 
         currentPath = new Path();
 
@@ -136,20 +156,20 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
 
     }
 
-    private void touchMove (float x, float y) {
+    private void pathMove(float x, float y) {
 
         float dx = Math.abs(x - mX);
         float dy = Math.abs(y - mY);
 
         if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
-
             currentPath.quadTo(mX, mY, (x + mX) / 2, (y + mY) / 2);
-
             mX = x;
             mY = y;
-
         }
+    }
 
+    private void pathEnd(){
+        currentPath.lineTo(mX, mY);
     }
 
     private void touchUp () {
@@ -160,9 +180,6 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
         }else{
             mainActivity.startLetterTimer();
         }
-
-        currentPath.lineTo(mX, mY);
-
     }
 
     @Override
@@ -177,22 +194,17 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
             switch (event.getAction()) {
 
                 case MotionEvent.ACTION_DOWN:
-                    Log.d(TAG, "actionDown");
-                    touchStart(x, y);
+                    pathStart(x, y);
                     touchDown();
-                    invalidate();
-                    mainActivity.cancelLetterTimer();
                     break;
                 case MotionEvent.ACTION_UP:
-                    Log.d(TAG, "actionUp");
+                    pathEnd();
                     touchUp();
-                    invalidate();
                     break;
                 case MotionEvent.ACTION_POINTER_DOWN:
                     break;
                 case MotionEvent.ACTION_MOVE:
-                    touchMove(x, y);
-                    invalidate();
+                    pathMove(x, y);
                     break;
 
             }
@@ -209,17 +221,17 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
         backgroundColor = DEFAULT_BG_COLOR;
 
         paths.clear();
-        invalidate();
+        //invalidate();
 
     }
 
-    public void undo () {
+    public void undo(int number) {
 
-        if (paths.size() > 0) {
+        if (paths.size() >= number) {
 
-            undo.add(paths.remove(paths.size() - 1));
-            invalidate(); // add
-
+            for(int i = 1; i<=number;i++){
+                undo.add(paths.remove(paths.size() - 1));
+            }
         } else {
 
             Toast.makeText(getContext(), "Nothing to undo", Toast.LENGTH_LONG).show();
@@ -233,7 +245,7 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
         if (undo.size() > 0) {
 
             paths.add(undo.remove(undo.size() - 1));
-            invalidate(); // add
+            //invalidate(); // add
 
         } else {
 
@@ -244,6 +256,7 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
 
 
     public Bitmap getBitmap() {
+        updateBitmap();
         return bitmap;
     }
 
@@ -305,13 +318,13 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
 
     @Override
     public void onLongPress(MotionEvent e) {
-        Log.d(TAG, "onLongPress");
+        //Log.d(TAG, "onLongPress");
 
     }
 
     @Override
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-        Log.d(TAG, "onFling");
+        //Log.d(TAG, "onFling");
         return false;
     }
 }
