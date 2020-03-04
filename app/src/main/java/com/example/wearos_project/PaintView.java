@@ -21,7 +21,7 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
         GestureDetector.OnDoubleTapListener {
 
     public static final int DEFAULT_COLOR = Color.BLACK;
-    public static final int DEFAULT_BG_COLOR = Color.BLACK;
+    public static final int DEFAULT_BG_COLOR = Color.WHITE;
     private static final float TOUCH_TOLERANCE = 4;
     public static final int DEFAULT_STROKE_WIDTH = 15;
 
@@ -29,13 +29,9 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
     private float mX, mY;
     private Path currentPath;
     private Paint paint;
-    private int backgroundColor = DEFAULT_BG_COLOR;
 
     private Bitmap bitmap;
-    private Bitmap blackBitmap;
-    private Canvas mCanvas;
-    private Canvas blackCanvas;
-    private Paint mBitmapPaint = new Paint(Paint.DITHER_FLAG);
+    private Canvas canvas;
 
     private ArrayList<Path> paths = new ArrayList<>();
     private ArrayList<Path> undo = new ArrayList<>();
@@ -85,42 +81,18 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
         int width = displayMetrics.widthPixels;
 
         bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        blackBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        mCanvas = new Canvas(bitmap);
-        blackCanvas = new Canvas(blackBitmap);
-        invalidate();
+        canvas = new Canvas(bitmap);
 
     }
 
     private void updateBitmap(){
-        mCanvas.drawColor(Color.WHITE);
-        int i = 0;
+        canvas.drawColor(DEFAULT_BG_COLOR);
         for (Path path : paths) {
-            i++;
-            mCanvas.drawPath(path, paint);
+            canvas.drawPath(path, paint);
         }
     }
 
-    @Override
-    protected void onDraw(Canvas canvas) {
 
-        canvas.save();
-        blackCanvas.drawColor(backgroundColor);
-        /*mCanvas.drawColor(Color.WHITE);
-        blackCanvas.drawColor(backgroundColor);
-
-        int i = 0;
-        for (Path path : paths) {
-            i++;
-            mCanvas.drawPath(path, paint);
-            Log.d(TAG,"draw path "+i);
-
-        }*/
-
-        canvas.drawBitmap(blackBitmap, 0, 0, mBitmapPaint); //change this to black to Hide
-        canvas.restore();
-
-    }
 
     public void touchDown(){
         if(mainActivity.isWaitingForDoubleTap()){
@@ -132,7 +104,6 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
     }
 
     public void handleDoubleTap() {
-        Log.d(TAG,""+paths.size());
         if (paths.size() > 2){
             undo(2);
             mainActivity.abridgeLetterTimer();
@@ -217,12 +188,7 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
     }
 
     public void clear () {
-
-        backgroundColor = DEFAULT_BG_COLOR;
-
         paths.clear();
-        //invalidate();
-
     }
 
     public void undo(int number) {
@@ -233,11 +199,8 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
                 undo.add(paths.remove(paths.size() - 1));
             }
         } else {
-
-            Toast.makeText(getContext(), "Nothing to undo", Toast.LENGTH_LONG).show();
-
+            Log.d(TAG,"Nothing to undo");
         }
-
     }
 
     public void redo () {
@@ -245,7 +208,6 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
         if (undo.size() > 0) {
 
             paths.add(undo.remove(undo.size() - 1));
-            //invalidate(); // add
 
         } else {
 
