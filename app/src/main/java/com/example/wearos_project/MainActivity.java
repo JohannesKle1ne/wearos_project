@@ -50,11 +50,12 @@ public class MainActivity extends WearableActivity implements
     private List<Node> connectedNode;
     private CountDownTimer letterTimer;
     private CountDownTimer doubleTapTimer;
+    CountDownTimer vibrationTimer;
     private static final String TAG = "WATCH_MAIN";
     private boolean waitingForDoubleTap = false;
 
     private boolean letterTimerRunning = false;
-    private boolean userSessionRunning = false;
+    private State state;
 
     private TextBuilder textbuilder;
 
@@ -74,6 +75,7 @@ public class MainActivity extends WearableActivity implements
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 
         paintView.initialise(displayMetrics, this);
+        state = State.NO_SESSION;
 
 
         client = new GoogleApiClient.Builder(this)
@@ -86,7 +88,7 @@ public class MainActivity extends WearableActivity implements
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (event.getRepeatCount() == 0) {
-            if (userSessionRunning) {
+            if (state == State.ENTER_LETTERS) {
                 if (keyCode == KeyEvent.KEYCODE_STEM_1) {
                     try {
                         abridgeLetterTimer();
@@ -141,7 +143,8 @@ public class MainActivity extends WearableActivity implements
             Toast.makeText(this, "user session started", Toast.LENGTH_SHORT).show();
         }
         textbuilder.setLogger(currentLogger);
-        userSessionRunning = true;
+        state = State.PICK_RECEIPIENT;
+        vibrateEndless();
     }
 
 
@@ -178,10 +181,6 @@ public class MainActivity extends WearableActivity implements
     public void onConnectionSuspended(int i) {
         Log.i("Wear", "Google Api Client connection suspended!");
 
-    }
-
-    public void sendSpace(){
-        send(MessageDict.SPACE.getBytes());
     }
 
     public void sendBitmap(Bitmap bitmap) throws JSONException {
@@ -246,10 +245,32 @@ public class MainActivity extends WearableActivity implements
         int amplitude = 50;
         vibrator.vibrate(VibrationEffect.createOneShot(milliseconds,amplitude));
     }
+
+    public void vibrateSoft(){
+        long milliseconds = 100;
+        int amplitude = 10;
+        vibrator.vibrate(VibrationEffect.createOneShot(milliseconds,amplitude));
+    }
+
     public void vibrateLong(){
         long milliseconds = 500;
         int amplitude = 50;
         vibrator.vibrate(VibrationEffect.createOneShot(milliseconds,amplitude));
+    }
+
+
+    public void vibrateEndless(){
+        vibrateSoft();
+        vibrationTimer = new CountDownTimer(600, 100) {
+            public void onTick(long millisUntilFinished) {
+            }
+            public void onFinish() {
+                if(state == State.PICK_RECEIPIENT){
+                    vibrateEndless();
+                }
+            }
+        };
+        vibrationTimer.start();
     }
 
 
@@ -258,7 +279,7 @@ public class MainActivity extends WearableActivity implements
             letterTimer.cancel();
         }
         letterTimerRunning = true;
-        letterTimer = new CountDownTimer(400, 100) {
+        letterTimer = new CountDownTimer(400, 300) {
             public void onTick(long millisUntilFinished) {
             }
             public void onFinish() {
@@ -319,8 +340,10 @@ public class MainActivity extends WearableActivity implements
         return waitingForDoubleTap;
     }
 
-    public boolean isUserSessionRunning() {
-        return userSessionRunning;
+    public State getState(){
+        return state;
     }
-
+    public void setState(State state){
+        this.state = state;
+    }
 }

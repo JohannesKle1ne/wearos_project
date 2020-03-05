@@ -40,6 +40,7 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
     private static final String TAG = "PaintView";
     private GestureDetector gestureDetector;
     private boolean doubleTapped;
+    private PickRec pickRec;
 
 
 
@@ -68,6 +69,7 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
 
         gestureDetector = new GestureDetector(context, this);
         doubleTapped =  false;
+        pickRec = new PickRec();
 
 
 
@@ -155,37 +157,56 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if(mainActivity.isUserSessionRunning()) {
+        float x = event.getX();
+        float y = event.getY();
 
-            float x = event.getX();
-            float y = event.getY();
-
+        if (mainActivity.getState() == State.PICK_RECEIPIENT) {
             gestureDetector.onTouchEvent(event);
 
             switch (event.getAction()) {
-
                 case MotionEvent.ACTION_DOWN:
-                    pathStart(x, y);
-                    touchDown();
+                    pickRec.setFirst(x,y);
                     break;
                 case MotionEvent.ACTION_UP:
-                    pathEnd();
-                    touchUp();
+                    pickRec.setSecond(x,y);
+                    //Toast.makeText(getContext(), "Recipient: "+pickRec.getRec(), Toast.LENGTH_SHORT).show();
+                    mainActivity.setState(State.ENTER_LETTERS);
+                    Log.d(TAG,pickRec.getRec());
                     break;
-                case MotionEvent.ACTION_POINTER_DOWN:
-                    break;
-                case MotionEvent.ACTION_MOVE:
-                    pathMove(x, y);
-                    break;
-
+                default:
             }
             return true;
+        } else {
+            if (mainActivity.getState() == State.ENTER_LETTERS) {
 
-        }else{
-            Toast.makeText(getContext(), "no user session started", Toast.LENGTH_SHORT).show();
-            return false;
+                gestureDetector.onTouchEvent(event);
+
+                switch (event.getAction()) {
+
+                    case MotionEvent.ACTION_DOWN:
+                        pathStart(x, y);
+                        touchDown();
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        pathEnd();
+                        touchUp();
+                        break;
+                    case MotionEvent.ACTION_POINTER_DOWN:
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        pathMove(x, y);
+                        break;
+
+                }
+                return true;
+
+            } else {
+                Toast.makeText(getContext(), "no user session started", Toast.LENGTH_SHORT).show();
+                return false;
+            }
         }
     }
+
 
     public void clear () {
         paths.clear();

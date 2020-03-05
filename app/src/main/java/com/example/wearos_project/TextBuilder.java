@@ -124,10 +124,6 @@ public class TextBuilder {
     }
 
 
-
-
-
-
     public void resetResult(){
         resultBitmap=null;
         logger.log(WatchLogger.RESET);
