@@ -179,19 +179,20 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         switch(messageType){
             case (MessageDict.BITMAP):
                 JSONObject messageObject = jsonObject.getJSONObject(MessageDict.MESSAGE);
-                String bitmap = messageObject.getString(MessageDict.BITMAP);
+                String bitmapString = messageObject.getString(MessageDict.BITMAP);
                 int userId = messageObject.getJSONObject(MessageDict.USER).getInt(MessageDict.ID);
-                if (bitmap.equals(MessageDict.EMPTY)) {
+                if (bitmapString.equals(MessageDict.EMPTY)) {
                     logView.addLine(RECEIVED_VIEW_DEFAULT + "-EMPTY-");
                     imageView.setImageResource(0);
                     //resultView.setText(RESULT_VIEW_DEFAULT);
                 }else {
-                    byte[] encodeByte = Base64.decode(bitmap, Base64.DEFAULT);
+                    byte[] encodeByte = Base64.decode(bitmapString, Base64.DEFAULT);
                     logView.addLine(RECEIVED_VIEW_DEFAULT + "-BITMAP-");
-                    Bitmap bmp = BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
-                    makeTextFromImage(bmp);
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
 
-                    if(saveBitmap(bmp, userId)){
+                    imageView.setImageBitmap(bitmap);
+
+                    if(saveBitmap(bitmap, userId)){
                         String jsonString = new JSONObject()
                                 .put(MessageDict.MESSAGE_TYPE, MessageDict.ACK)
                                 .put(MessageDict.MESSAGE, MessageDict.BITMAP_SAVED)
@@ -299,6 +300,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             return false;
         }
     }
+
+
 
     public boolean isExternalStorageWritable(){
         if(Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())){
