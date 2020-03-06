@@ -12,7 +12,7 @@ public class TextBuilder {
     private final static String TAG = "TextBuilder";
     private final int letterWidth = 296;
     private final int letterHeight = 416;
-    private final int lineLetterLimit = 4;
+    private final int lineLetterLimit = 10;
 
 
     public void addLetter(Bitmap bm) {

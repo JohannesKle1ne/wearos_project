@@ -169,7 +169,6 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
                     break;
                 case MotionEvent.ACTION_UP:
                     pickRec.setSecond(x,y);
-                    //Toast.makeText(getContext(), "Recipient: "+pickRec.getRec(), Toast.LENGTH_SHORT).show();
                     mainActivity.setState(State.ENTER_LETTERS);
                     Log.d(TAG,pickRec.getRec());
                     break;
@@ -202,6 +201,7 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
 
             } else {
                 Toast.makeText(getContext(), "no user session started", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "nodes: "+mainActivity.getConnectedNodeSize(), Toast.LENGTH_SHORT).show();
                 return false;
             }
         }

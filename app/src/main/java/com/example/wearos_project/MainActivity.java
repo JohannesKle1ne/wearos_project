@@ -86,6 +86,37 @@ public class MainActivity extends WearableActivity implements
     }
 
     @Override
+    public void onConnected(@Nullable Bundle bundle) {
+
+        getPhoneNode();
+
+        Wearable.MessageApi.addListener(client, new MessageClient.OnMessageReceivedListener() {
+            @Override
+            public void onMessageReceived(@NonNull MessageEvent messageEvent) {
+                String message = new String(messageEvent.getData());
+                Log.i("Received: ", message);
+                try {
+                    handleMessage(message);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    private void getPhoneNode(){
+        if(connectedNode==null || connectedNode.size()==0) {
+            Wearable.NodeApi.getConnectedNodes(client).setResultCallback(new ResultCallback<NodeApi.GetConnectedNodesResult>() {
+                @Override
+                public void onResult(NodeApi.GetConnectedNodesResult getConnectedNodesResult) {
+                    connectedNode = getConnectedNodesResult.getNodes();
+                }
+            });
+            Log.d(TAG,"getPhoneNode()");
+        }
+    }
+
+    @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (event.getRepeatCount() == 0) {
             if (state == State.ENTER_LETTERS) {
@@ -106,31 +137,6 @@ public class MainActivity extends WearableActivity implements
             }
         }
         return super.onKeyDown(keyCode, event);
-    }
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        Log.i("connected!", "");
-        Wearable.NodeApi.getConnectedNodes(client).setResultCallback(new ResultCallback<NodeApi.GetConnectedNodesResult>() {
-            @Override
-            public void onResult(NodeApi.GetConnectedNodesResult getConnectedNodesResult) {
-                connectedNode = getConnectedNodesResult.getNodes();
-            }
-        });
-
-        Wearable.MessageApi.addListener(client, new MessageClient.OnMessageReceivedListener() {
-            @Override
-            public void onMessageReceived(@NonNull MessageEvent messageEvent) {
-                String message = new String(messageEvent.getData());
-                Log.i("Received: ", message);
-                try {
-                    handleMessage(message);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
     }
 
     public void startUserSession(int userId){
@@ -172,6 +178,9 @@ public class MainActivity extends WearableActivity implements
             case(MessageDict.LOG_REQUEST):
                 sendLogs();
                 break;
+            case(MessageDict.HEY):
+                getPhoneNode();
+                break;
             default:
                 Toast.makeText(this, "received unknown message", Toast.LENGTH_SHORT).show();
         }
@@ -206,7 +215,6 @@ public class MainActivity extends WearableActivity implements
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            Log.d(TAG,"sendBitmap Method");
             send(json.toString().getBytes());
         }
     }
@@ -230,12 +238,10 @@ public class MainActivity extends WearableActivity implements
         send(jsonObject.toString().getBytes());
     }
 
-    public void send(byte[] byteArray){
+    public void send(byte[] byteArray){ //changed meal!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         for (int i = 0; i < connectedNode.size(); i++) {
-            Wearable.MessageApi.sendMessage(client, connectedNode.get(i).getId(), "/meal", byteArray);
-            Log.i("sent: ", new String(byteArray));
-            Log.d(TAG,""+i);
-
+            Wearable.MessageApi.sendMessage(client, connectedNode.get(i).getId(), "/1", byteArray);
+            Log.d("sent: ", new String(byteArray));
         }
     }
 
@@ -331,6 +337,9 @@ public class MainActivity extends WearableActivity implements
             doubleTapTimer.cancel();
     }
 
+    public int getConnectedNodeSize() {
+        return connectedNode.size();
+    }
 
     public TextBuilder getTextBuilder() {
         return textbuilder;

@@ -149,6 +149,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             @Override
             public void onResult(NodeApi.GetConnectedNodesResult getConnectedNodesResult) {
                 connectedNode = getConnectedNodesResult.getNodes();
+                sendHey();
             }
         });
 
@@ -163,7 +164,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 }
             }
         });
-        Log.i("Phone client connected", String.valueOf(client.isConnected()));
     }
 
     @Override
@@ -334,6 +334,18 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             idInput.getText().clear();
         }else{
             Log.i(TAG, "id input Field is empty!");
+        }
+    }
+
+    private void sendHey(){
+        try {
+            String jsonString = new JSONObject()
+                    .put(MessageDict.MESSAGE_TYPE,MessageDict.HEY)
+                    .put(MessageDict.MESSAGE,null)
+                    .toString();
+            sendMessage(jsonString);
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
     }
 
