@@ -8,17 +8,15 @@ import androidx.core.content.ContextCompat;
 import java.util.Calendar;
 
 import android.Manifest;
-import android.content.Context;
+import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.media.MediaScannerConnection;
 import android.os.Bundle;
 
 import android.os.Environment;
-import android.os.SystemClock;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Base64;
 import android.util.Log;
@@ -27,7 +25,6 @@ import android.util.SparseArray;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,7 +41,6 @@ import com.google.android.gms.vision.text.TextBlock;
 import com.google.android.gms.vision.text.TextRecognizer;
 import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
-import com.google.gson.JsonObject;
 
 
 import org.json.JSONArray;
@@ -54,20 +50,16 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Date;
 import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks {
 
-    TextView receivedView;
-    TextView resultView;
     TextView userId;
     TextView watchLogCount;
     LogView logView;
-    ImageView imageView;
+    BitmapView bitmapView;
     Button startUserSession;
     Button getWatchLogs;
     EditText idInput;
@@ -79,6 +71,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private static final String RECEIVED_VIEW_DEFAULT = "Received: ";
 
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -92,11 +85,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         idInput = findViewById(R.id.idInput);
         startUserSession = findViewById(R.id.button);
         getWatchLogs = findViewById(R.id.getWatchLogs);
-        receivedView = findViewById(R.id.output);
-        resultView = findViewById(R.id.recognized);
-        receivedView.setVisibility(View.GONE);
-        resultView.setVisibility(View.GONE);
-        imageView = findViewById(R.id.image);
+        bitmapView = findViewById(R.id.image);
 
 
 
@@ -110,11 +99,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     public void makeTextFromImage(Bitmap bm){
 
         //other branch
-        imageView.setImageBitmap(bm);
+        //bitmapView.setImageBitmap(bm);
 
         Bitmap bitmap = bm;
 
-        imageView.setImageBitmap(bitmap);
+        //bitmapView.setImageBitmap(bitmap);
 
         TextRecognizer tr = new TextRecognizer.Builder(getApplicationContext()).build();
 
@@ -131,7 +120,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             String result = sb.toString();
             //used when word is concatinated at phone
             //receivedView.setText(receivedView.getText().toString()+sb.toString());
-            resultView.setText(RESULT_VIEW_DEFAULT +sb.toString());
         }
     }
 
@@ -182,15 +170,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 String bitmapString = messageObject.getString(MessageDict.BITMAP);
                 int userId = messageObject.getJSONObject(MessageDict.USER).getInt(MessageDict.ID);
                 if (bitmapString.equals(MessageDict.EMPTY)) {
-                    logView.addLine(RECEIVED_VIEW_DEFAULT + "-EMPTY-");
-                    imageView.setImageResource(0);
+                    //bitmapView.setImageResource(0);
                     //resultView.setText(RESULT_VIEW_DEFAULT);
                 }else {
                     byte[] encodeByte = Base64.decode(bitmapString, Base64.DEFAULT);
-                    logView.addLine(RECEIVED_VIEW_DEFAULT + "-BITMAP-");
                     Bitmap bitmap = BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
 
-                    imageView.setImageBitmap(bitmap);
+                    //bitmapView.setImageBitmap(bitmap);
+                    bitmapView.addBitmap(bitmap);
 
                     if(saveBitmap(bitmap, userId)){
                         String jsonString = new JSONObject()
@@ -208,8 +195,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 for (int i = 0; i < messageArray.length(); i++) {
                     JSONObject currentObject = messageArray.getJSONObject(i);
                     String log = currentObject.getString(MessageDict.LOG);
-                    int loggerId = currentObject.getJSONObject(MessageDict.USER).getInt(MessageDict.ID);
-                    successfulSaved = saveLog(log, loggerId)&&successfulSaved;
+                    String fileName = currentObject.getString(MessageDict.FILE_NAME);
+
+                    successfulSaved = saveLog(log, fileName)&&successfulSaved;
+                    logView.setText("Log: \n\n"+log);
                 }
                 if(successfulSaved){
                     watchLogCount.setText(messageArray.length()+" log files saved");
@@ -223,16 +212,12 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
     }
 
-    private boolean saveLog(String log, int loggerId) {
+    private boolean saveLog(String log, String fileName) {
         if (checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 && isExternalStorageWritable()) {
 
             File filePath = new File(Environment.getExternalStorageDirectory()
                     .toString() + "/#Logs");
-            String fileName = Calendar.getInstance().getTime().toString()
-                    .substring(4,19).replaceAll("\\s+","_")
-                    .replaceAll(":","-")
-                    +"_id:_"+loggerId+".txt";
 
             if (filePath.exists()) {
 
@@ -350,9 +335,18 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     public void requestWatchLogs(View v){
-        try {
+        /*try {
             String jsonString = new JSONObject()
                     .put(MessageDict.MESSAGE_TYPE,MessageDict.LOG_REQUEST)
+                    .put(MessageDict.MESSAGE,null)
+                    .toString();
+            sendMessage(jsonString);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }*/
+        try {
+            String jsonString = new JSONObject()
+                    .put(MessageDict.MESSAGE_TYPE,MessageDict.END_USER_SESSION)
                     .put(MessageDict.MESSAGE,null)
                     .toString();
             sendMessage(jsonString);

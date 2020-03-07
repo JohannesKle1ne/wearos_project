@@ -35,7 +35,6 @@ import java.io.IOException;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 
 public class MainActivity extends WearableActivity implements
@@ -112,7 +111,6 @@ public class MainActivity extends WearableActivity implements
                     connectedNode = getConnectedNodesResult.getNodes();
                 }
             });
-            Log.d(TAG,"getPhoneNode()");
         }
     }
 
@@ -124,11 +122,14 @@ public class MainActivity extends WearableActivity implements
                     try {
                         abridgeLetterTimer();
                         sendBitmap(textbuilder.getResult());
+                        currentLogger.log(WatchLogger.SEND);
+                        sendLogs();
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
                     return true;
                 } else if (keyCode == KeyEvent.KEYCODE_STEM_2) {
+                    abridgeLetterTimer();
                     textbuilder.removeLetter();
                     return true;
                 }
@@ -140,17 +141,20 @@ public class MainActivity extends WearableActivity implements
     }
 
     public void startUserSession(int userId){
-        if(watchLoggers.containsKey(userId)){
+        /*if(watchLoggers.containsKey(userId)){
             currentLogger = watchLoggers.get(userId);
             Toast.makeText(this, "user session reactivated", Toast.LENGTH_SHORT).show();
         } else {
             currentLogger = new WatchLogger(userId);
             watchLoggers.put(userId, currentLogger);
             Toast.makeText(this, "user session started", Toast.LENGTH_SHORT).show();
-        }
+        }*/
+        Toast.makeText(this, "user session started", Toast.LENGTH_SHORT).show();
+        currentLogger = new WatchLogger(userId);
         textbuilder.setLogger(currentLogger);
-        state = State.PICK_RECEIPIENT;
-        vibrateEndless();
+        state = State.ENTER_LETTERS;    ///here change State
+        vibrate();
+        //vibrateEndless();
     }
 
 
@@ -173,9 +177,14 @@ public class MainActivity extends WearableActivity implements
                 int userID = messageObject.getJSONObject(MessageDict.MESSAGE)
                         .getJSONObject(MessageDict.USER).getInt(MessageDict.ID);
                 startUserSession(userID);
-                vibrateLong();
+                //vibrateLong();
                 break;
             case(MessageDict.LOG_REQUEST):
+                //sendLogs();
+                break;
+            case(MessageDict.END_USER_SESSION):
+                state = State.NO_SESSION;
+                currentLogger.log(WatchLogger.SESSION_ENDED);
                 sendLogs();
                 break;
             case(MessageDict.HEY):
@@ -193,6 +202,7 @@ public class MainActivity extends WearableActivity implements
     }
 
     public void sendBitmap(Bitmap bitmap) throws JSONException {
+
         JSONObject json = new JSONObject()
                 .put(MessageDict.MESSAGE_TYPE,MessageDict.BITMAP)
                 .put(MessageDict.MESSAGE,new JSONObject()
@@ -225,7 +235,13 @@ public class MainActivity extends WearableActivity implements
                 .put(MessageDict.MESSAGE, new JSONArray());
         JSONArray logArray = jsonObject.getJSONArray(MessageDict.MESSAGE);
 
-        for (Map.Entry<Integer, WatchLogger> entry : watchLoggers.entrySet()) {
+        logArray.put(
+                new JSONObject()
+                        .put(MessageDict.USER, new JSONObject()
+                                .put(MessageDict.ID, currentLogger.getId()))
+                        .put(MessageDict.LOG, currentLogger.getLogs())
+                        .put(MessageDict.FILE_NAME, currentLogger.getFilename()));
+        /*for (Map.Entry<Integer, WatchLogger> entry : watchLoggers.entrySet()) {
 
             String logs = entry.getValue().getLogs();
             logArray.put(
@@ -234,7 +250,7 @@ public class MainActivity extends WearableActivity implements
                                     .put(MessageDict.ID, entry.getValue().getId()))
                             .put(MessageDict.LOG, logs));
 
-        }
+        }*/
         send(jsonObject.toString().getBytes());
     }
 
@@ -271,7 +287,7 @@ public class MainActivity extends WearableActivity implements
             public void onTick(long millisUntilFinished) {
             }
             public void onFinish() {
-                if(state == State.PICK_RECEIPIENT){
+                if(state == State.PICK_RECIPIENT){
                     vibrateEndless();
                 }
             }
@@ -291,6 +307,7 @@ public class MainActivity extends WearableActivity implements
             public void onFinish() {
                 Bitmap bitmap = paintView.getBitmap();
                 textbuilder.addLetter(bitmap);
+                currentLogger.log(WatchLogger.LETTER_END);
                 vibrate();
                 paintView.clear();
                 letterTimerRunning = false;
@@ -304,6 +321,7 @@ public class MainActivity extends WearableActivity implements
             cancelLetterTimer();
             Bitmap bitmap = paintView.getBitmap();
             textbuilder.addLetter(bitmap);
+            currentLogger.log(WatchLogger.LETTER_END);
             paintView.clear();
         }
     }
@@ -341,12 +359,20 @@ public class MainActivity extends WearableActivity implements
         return connectedNode.size();
     }
 
+    public WatchLogger getCurrentLogger() {
+        return currentLogger;
+    }
+
     public TextBuilder getTextBuilder() {
         return textbuilder;
     }
 
     public boolean isWaitingForDoubleTap(){
         return waitingForDoubleTap;
+    }
+
+    public boolean isLetterTimerRunning(){
+        return letterTimerRunning;
     }
 
     public State getState(){

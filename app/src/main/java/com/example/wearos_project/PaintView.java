@@ -97,6 +97,10 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
 
 
     public void touchDown(){
+        if(!mainActivity.isLetterTimerRunning()){
+            mainActivity.getCurrentLogger().log(WatchLogger.LETTER_START);
+        }
+
         if(mainActivity.isWaitingForDoubleTap()){
             handleDoubleTap();
         }else{
@@ -160,7 +164,7 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
         float x = event.getX();
         float y = event.getY();
 
-        if (mainActivity.getState() == State.PICK_RECEIPIENT) {
+        if (mainActivity.getState() == State.PICK_RECIPIENT) {
             gestureDetector.onTouchEvent(event);
 
             switch (event.getAction()) {
@@ -201,7 +205,6 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
 
             } else {
                 Toast.makeText(getContext(), "no user session started", Toast.LENGTH_SHORT).show();
-                Toast.makeText(getContext(), "nodes: "+mainActivity.getConnectedNodeSize(), Toast.LENGTH_SHORT).show();
                 return false;
             }
         }

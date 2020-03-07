@@ -24,7 +24,6 @@ public class TextBuilder {
         } else {
             resultBitmap = combineImages(resultBitmap, bitmap);
         }
-        logger.log(WatchLogger.LETTER);
     }
 
     public void removeLetter() {
@@ -120,13 +119,16 @@ public class TextBuilder {
                 comboImage.drawBitmap(lower, 0f, upper.getHeight(), null);
             }
         }
-        return result;
+        //scale the Bitmap
+        int newWidth = result.getWidth()/2;
+        int newHeight = result.getHeight()/2;
+        Bitmap scaledBitmap = Bitmap.createScaledBitmap(result, newWidth, newHeight, false);
+        return scaledBitmap;
     }
 
 
     public void resetResult(){
         resultBitmap=null;
-        logger.log(WatchLogger.RESET);
     }
 
 

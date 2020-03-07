@@ -13,5 +13,7 @@ public class MessageDict {
     public static final String LOG_REQUEST = "log_request";
     public static final String BITMAP_SAVED = "bitmap_saved";
     public static final String HEY = "hey";
+    public static final String FILE_NAME = "file_name";
+    public static final String END_USER_SESSION = "end_user_session";
 
 }

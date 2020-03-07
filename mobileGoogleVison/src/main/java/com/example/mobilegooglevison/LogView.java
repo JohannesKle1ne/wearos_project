@@ -15,4 +15,5 @@ public class LogView extends AppCompatTextView {
     public void addLine(String line){
         this.setText(this.getText()+"\n"+line);
     }
+
 }
