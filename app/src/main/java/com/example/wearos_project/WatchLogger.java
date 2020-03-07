@@ -43,28 +43,30 @@ public class WatchLogger {
         currentWord = null;
 
         initTime = SystemClock.elapsedRealtime();
-        logs.add(new LogEntry(SESSION_STARTED,null));
+        logs.add(new LogEntry(SESSION_STARTED));
         fileName = Calendar.getInstance().getTime().toString()
                 .substring(4,19).replaceAll("\\s+","_")
                 .replaceAll(":","-")
                 +"_id:_"+id+".txt";
     }
 
+    //TODO move all cases here
     public void log(int type) {
         switch(type) {
             case (LETTER_START):
+                //more letters are started than finished
                 currentLetter = new Letter(getCurrentTimestamp());
                 break;
             case (SEND):
                 if(currentWord!=null){
                     currentWord.setFinishTime(getCurrentTimestamp());
-                    logs.add(new LogEntry(type, logs.get(logs.size() - 1)));
+                    logs.add(new LogEntry(type));
                     words.add(currentWord);
                     currentWord = null;
                 }
                 break;
             default:
-                logs.add(new LogEntry(type, logs.get(logs.size() - 1)));
+                logs.add(new LogEntry(type));
         }
     }
 
@@ -95,12 +97,10 @@ public class WatchLogger {
 
         private String logString;
         private double timestamp;
-        private LogEntry referenceEntry;
         private int entryType;
 
-        public LogEntry(int entryType, LogEntry referenceEntry) {
+        public LogEntry(int entryType) {
             this.timestamp = getCurrentTimestamp();
-            this.referenceEntry = referenceEntry;
             this.entryType = entryType;
 
             switch(entryType){
@@ -116,9 +116,6 @@ public class WatchLogger {
                     }else{
                         this.logString = "added space, no word finished";
                     }
-                    for (int i = 0; i < words.size(); i++) {
-                        Log.d(TAG, "WORDS1: "+words.get(i));
-                    }
                     break;
                 case (LETTER_END):
                     currentLetter.setFinishTime(getCurrentTimestamp());
@@ -126,6 +123,8 @@ public class WatchLogger {
                             +((currentLetter.getFinishTime()-currentLetter.getStartTime())/1000)+"sec";
                     letters.add(currentLetter);
                     if(currentWord==null){
+                        //A word is started right after the first letter has ended.
+                        // ..It gets passed the letters start time
                         currentWord = new Word(currentLetter.getStartTime());
                     }
                     break;
@@ -139,38 +138,27 @@ public class WatchLogger {
                         words.add(currentWord);
                         currentWord = null;
                     }
-                    Log.d(TAG,words.size()+"");
-                    for (int i = 0; i < words.size(); i++) {
-                        Log.d(TAG, "WORDS2: "+words.get(i));
-                    }
-                    double duration = words.get(words.size()-1).getFinishTime()-words.get(0).getStartTime()/60000;
+                    //wpm refers to the time interval from the touch of the first letter(also the word start time),
+                    //until the end of the last Word
+                    double wordsStart = words.get(0).getStartTime();
+                    double wordsEnd = words.get(words.size()-1).getFinishTime();
+                    double duration = (wordsEnd-wordsStart)/60000;
                     double wpm = Math.round((words.size()/duration)*100.0)/100.0;
-                    this.logString = "user session ended. speed: "+wpm+" wpm";
+                    double wpmRounded = Math.round(wpm*100.0)/100.0;
+                    this.logString = "user session ended. speed: "+wpmRounded+" wpm";
                     break;
                 case (REMOVE): this.logString = "removed Letter";
                     break;
                 case (RESET): this.logString = "reset all letters";
                     break;
                 case (SEND):
-                    if(currentWord!=null){
-                        currentWord.setFinishTime(getCurrentTimestamp());
                         this.logString = "word finished in: "
                                 +((currentWord.getFinishTime()-currentWord.getStartTime())/1000)+"sec";
-                        words.add(currentWord);
-                        currentWord = null;
-                    }
-                    for (int i = 0; i < words.size(); i++) {
-                        Log.d(TAG, "WORDS3: "+words.get(i));
-                    }
                     break;
                 default:
                     Log.d(TAG, "there's no such entryType");
                     break;
             }
-        }
-
-        public double getTimestamp() {
-            return timestamp;
         }
 
         @NonNull
@@ -209,10 +197,6 @@ public class WatchLogger {
         double finishTime;
 
         public Word(double startTime){
-            this.startTime = startTime;
-        }
-
-        public void setStartTime(double startTime) {
             this.startTime = startTime;
         }
 

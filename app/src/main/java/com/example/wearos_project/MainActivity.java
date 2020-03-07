@@ -120,6 +120,8 @@ public class MainActivity extends WearableActivity implements
             if (state == State.ENTER_LETTERS) {
                 if (keyCode == KeyEvent.KEYCODE_STEM_1) {
                     try {
+                        //Log order matters here. first the letter will END,
+                        //then SEND will calculate word duration, then logs are sent
                         abridgeLetterTimer();
                         sendBitmap(textbuilder.getResult());
                         currentLogger.log(WatchLogger.SEND);
@@ -183,6 +185,7 @@ public class MainActivity extends WearableActivity implements
                 //sendLogs();
                 break;
             case(MessageDict.END_USER_SESSION):
+                //TODO Fix when no logger and someHow log the word before SESSION_END
                 state = State.NO_SESSION;
                 currentLogger.log(WatchLogger.SESSION_ENDED);
                 sendLogs();

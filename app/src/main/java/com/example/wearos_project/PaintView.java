@@ -98,10 +98,14 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
 
     public void touchDown(){
         if(!mainActivity.isLetterTimerRunning()){
+            //this will be called when a new letter has began.
+            // ...But also when a "not abridging" double tap happens. In this case the
+            // letter will never be finished
             mainActivity.getCurrentLogger().log(WatchLogger.LETTER_START);
         }
-
         if(mainActivity.isWaitingForDoubleTap()){
+            //...Here the "abridging" double tap, will just log the whole letter
+            // using abridgeLetterTimer()
             handleDoubleTap();
         }else{
             mainActivity.startDoubleTapTimer();
