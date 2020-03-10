@@ -19,25 +19,25 @@ public class PickRec {
         this.second = new int[]{(int)x,(int)y};
     }
 
-    public String getRec(){
+    public int getRec(){
         int deltaX = first[0]-second[0];
         int deltaY = first[1]-second[1];
         int deltaXAbs = Math.abs(deltaX);
         int deltaYAbs = Math.abs(deltaY);
         if(deltaXAbs<deltaYAbs){
             if(deltaY<0){
-                return "DOWN";
+                return 11;
             }else{
-                return "UP";
+                return 9;
             }
         }
         if(deltaXAbs>deltaYAbs){
             if(deltaX<0){
-                return "RIGHT";
+                return 10;
             }else{
-                return "LEFT";
+                return 12;
             }
         }
-        return "DEFAULT";
+        return -1;
     }
 }

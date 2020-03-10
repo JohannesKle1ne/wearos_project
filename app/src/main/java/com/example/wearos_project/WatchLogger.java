@@ -21,6 +21,11 @@ public class WatchLogger {
     public static final int LETTER_END = 6;
     public static final int SEND = 7;
     public static final int WORD_END = 8;
+    public static final int REP_A = 9;
+    public static final int REP_B = 10;
+    public static final int REP_C = 11;
+    public static final int REP_D = 12;
+
 
     private long initTime;
     private final String TAG = "WatchLogger";
@@ -60,10 +65,11 @@ public class WatchLogger {
             case (SEND):
                 if(currentWord!=null){
                     currentWord.setFinishTime(getCurrentTimestamp());
-                    logs.add(new LogEntry(type));
+                    logs.add(new LogEntry(WORD_END));
                     words.add(currentWord);
                     currentWord = null;
                 }
+                logs.add(new LogEntry(type));
                 break;
             default:
                 logs.add(new LogEntry(type));
@@ -91,6 +97,17 @@ public class WatchLogger {
     }
 
 
+    private double calculateWpm(){
+        if (words.size()<1){
+            return 0;
+        }else {
+            double wordsStart = words.get(0).getStartTime();
+            double wordsEnd = words.get(words.size() - 1).getFinishTime();
+            double duration = (wordsEnd - wordsStart) / 60000;
+            double wpm = Math.round((words.size() / duration) * 100.0) / 100.0;
+            return Math.round(wpm * 100.0) / 100.0;
+        }
+    }
 
 
     private class LogEntry{
@@ -128,7 +145,9 @@ public class WatchLogger {
                         currentWord = new Word(currentLetter.getStartTime());
                     }
                     break;
-                case (WORD_END): this.logString = "added word";
+                case (WORD_END):
+                    this.logString = "word finished in: "
+                            +((currentWord.getFinishTime()-currentWord.getStartTime())/1000)+"sec";
                     break;
                 case (SESSION_ENDED):
                     if(currentWord!=null){
@@ -140,20 +159,28 @@ public class WatchLogger {
                     }
                     //wpm refers to the time interval from the touch of the first letter(also the word start time),
                     //until the end of the last Word
-                    double wordsStart = words.get(0).getStartTime();
-                    double wordsEnd = words.get(words.size()-1).getFinishTime();
-                    double duration = (wordsEnd-wordsStart)/60000;
-                    double wpm = Math.round((words.size()/duration)*100.0)/100.0;
-                    double wpmRounded = Math.round(wpm*100.0)/100.0;
-                    this.logString = "user session ended. speed: "+wpmRounded+" wpm";
+                    this.logString = "user session ended. speed: "+calculateWpm()+" wpm";
+                    words.clear();
                     break;
                 case (REMOVE): this.logString = "removed Letter";
                     break;
                 case (RESET): this.logString = "reset all letters";
                     break;
                 case (SEND):
-                        this.logString = "word finished in: "
-                                +((currentWord.getFinishTime()-currentWord.getStartTime())/1000)+"sec";
+                        this.logString = "message sent. entry speed: "+calculateWpm()+" wpm";
+                        words.clear();
+                    break;
+                case(REP_A):
+                    this.logString = "recipient: A ";
+                    break;
+                case(REP_B):
+                    this.logString = "recipient: B ";
+                    break;
+                case(REP_C):
+                    this.logString = "recipient: C ";
+                    break;
+                case(REP_D):
+                    this.logString = "recipient: D ";
                     break;
                 default:
                     Log.d(TAG, "there's no such entryType");

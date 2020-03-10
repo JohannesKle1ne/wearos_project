@@ -154,9 +154,9 @@ public class MainActivity extends WearableActivity implements
         Toast.makeText(this, "user session started", Toast.LENGTH_SHORT).show();
         currentLogger = new WatchLogger(userId);
         textbuilder.setLogger(currentLogger);
-        state = State.ENTER_LETTERS;    ///here change State
+        state = State.PICK_RECIPIENT;    ///here change State
         vibrate();
-        //vibrateEndless();
+        vibrateEndless();
     }
 
 
@@ -186,9 +186,11 @@ public class MainActivity extends WearableActivity implements
                 break;
             case(MessageDict.END_USER_SESSION):
                 //TODO Fix when no logger and someHow log the word before SESSION_END
-                state = State.NO_SESSION;
-                currentLogger.log(WatchLogger.SESSION_ENDED);
-                sendLogs();
+                if (state != State.NO_SESSION) {
+                    state = State.NO_SESSION;
+                    currentLogger.log(WatchLogger.SESSION_ENDED);
+                    sendLogs();
+                }
                 break;
             case(MessageDict.HEY):
                 getPhoneNode();
@@ -285,6 +287,9 @@ public class MainActivity extends WearableActivity implements
 
 
     public void vibrateEndless(){
+        if(vibrationTimer !=null) {
+            vibrationTimer.cancel();
+        }
         vibrateSoft();
         vibrationTimer = new CountDownTimer(600, 100) {
             public void onTick(long millisUntilFinished) {
@@ -292,6 +297,8 @@ public class MainActivity extends WearableActivity implements
             public void onFinish() {
                 if(state == State.PICK_RECIPIENT){
                     vibrateEndless();
+                }else{
+                    vibrationTimer.cancel();
                 }
             }
         };

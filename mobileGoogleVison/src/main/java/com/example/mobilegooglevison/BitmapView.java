@@ -12,16 +12,14 @@ import java.util.ArrayList;
 
 public class BitmapView extends AppCompatImageView {
 
-    private ArrayList<Bitmap> bitmapList;
-    private Bitmap currentBitmap;
-    private int currentId;
 
     private int down;
     private int up;
 
     public BitmapView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        bitmapList = new ArrayList<>();
+        BitmapStorage.getInstance().delegate = this;
+        updateBitmap();
     }
 
     @Override
@@ -36,31 +34,17 @@ public class BitmapView extends AppCompatImageView {
             case MotionEvent.ACTION_UP:
                 this.up = (int)event.getX();
                 if (down < up) {
-                    if (currentId > 0) {
-                        currentBitmap = bitmapList.get(currentId - 1);
-                        currentId--;
-                    }
+                    BitmapStorage.getInstance().goLeft();
                 }
                 if(down > up){
-                    if (currentId+1 < bitmapList.size()) {
-                        currentBitmap = bitmapList.get(currentId + 1);
-                        currentId++;
-                    }
+                    BitmapStorage.getInstance().goRight();
                 }
-                updateBitmap();
                 return true;
         }
         return false;
     }
 
-    private void updateBitmap(){
-        this.setImageBitmap(currentBitmap);
-    }
-
-    public void addBitmap(Bitmap b){
-        bitmapList.add(b);
-        currentBitmap = b;
-        currentId = bitmapList.size()-1;
-        updateBitmap();
+    public void updateBitmap(){
+        this.setImageBitmap(BitmapStorage.getInstance().getCurrentBitmap());
     }
 }

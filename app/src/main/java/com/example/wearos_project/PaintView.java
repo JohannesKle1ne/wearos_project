@@ -178,7 +178,8 @@ public class PaintView extends View implements GestureDetector.OnGestureListener
                 case MotionEvent.ACTION_UP:
                     pickRec.setSecond(x,y);
                     mainActivity.setState(State.ENTER_LETTERS);
-                    Log.d(TAG,pickRec.getRec());
+                    mainActivity.getCurrentLogger().log(pickRec.getRec());
+                    //Log.d(TAG,pickRec.getRec());
                     break;
                 default:
             }

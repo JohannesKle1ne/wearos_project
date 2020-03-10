@@ -5,10 +5,12 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -59,7 +61,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     TextView userId;
     TextView watchLogCount;
     LogView logView;
-    BitmapView bitmapView;
     Button startUserSession;
     Button getWatchLogs;
     EditText idInput;
@@ -85,7 +86,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         idInput = findViewById(R.id.idInput);
         startUserSession = findViewById(R.id.button);
         getWatchLogs = findViewById(R.id.getWatchLogs);
-        bitmapView = findViewById(R.id.image);
 
 
 
@@ -94,6 +94,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 .addApi(Wearable.API)
                 .build();
         client.connect();
+    }
+
+    public void openLandscapeActivity(View v){
+        Intent intent = new Intent(this, LandscapeActivity.class);
+        startActivity(intent);
     }
 
     public void makeTextFromImage(Bitmap bm){
@@ -177,7 +182,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     Bitmap bitmap = BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
 
                     //bitmapView.setImageBitmap(bitmap);
-                    bitmapView.addBitmap(bitmap);
+                    BitmapStorage.getInstance().addBitmap(bitmap);
 
                     if(saveBitmap(bitmap, userId)){
                         String jsonString = new JSONObject()
@@ -201,9 +206,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     logView.setText("Log: \n\n"+log);
                 }
                 if(successfulSaved){
-                    watchLogCount.setText(messageArray.length()+" log files saved");
+                    //watchLogCount.setText(messageArray.length()+" log files saved");
                 }else{
-                    watchLogCount.setText("SAVE ERROR");
+                    //watchLogCount.setText("SAVE ERROR");
                 }
 
                 break;
