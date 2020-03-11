@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -182,15 +183,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     Bitmap bitmap = BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
 
                     //bitmapView.setImageBitmap(bitmap);
-                    BitmapStorage.getInstance().addBitmap(bitmap);
 
-                    if(saveBitmap(bitmap, userId)){
-                        String jsonString = new JSONObject()
-                                .put(MessageDict.MESSAGE_TYPE, MessageDict.ACK)
-                                .put(MessageDict.MESSAGE, MessageDict.BITMAP_SAVED)
-                                .toString();
-                        sendMessage(jsonString);
-                    }
+                    saveBitmap(bitmap,userId);
                 }
                 break;
             case (MessageDict.LOG):
@@ -251,7 +245,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
     }
 
-    public boolean saveBitmap(Bitmap bitmap, int userId){
+    public void saveBitmap(Bitmap bitmap, int userId){
+        //write External
         if (checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 && isExternalStorageWritable()) {
 
@@ -273,22 +268,55 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
                     fos.flush();
                     fos.close();
-                    return true;
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
-                    return false;
                 } catch (IOException e) {
                     e.printStackTrace();
-                    return false;
                 }
             } else {
                 Log.i(TAG, "directory does not exist");
-                return false;
             }
         } else {
             Log.i(TAG, "write permission not granted!");
-            return false;
         }
+        saveInternal(bitmap,userId);
+    }
+
+    private void saveInternal(Bitmap bitmap, int userId){
+        //write internal
+        String fileName = Calendar.getInstance().getTime().toString()
+                .substring(4, 19).replaceAll("\\s+", "_")
+                .replaceAll(":", "-")
+                + "_id:_" + userId + ".png";
+
+        FileOutputStream fos;
+        try {
+            fos = openFileOutput(fileName,MODE_PRIVATE);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+
+            fos.flush();
+            fos.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        BitmapStorage.getInstance().addBitmap(bitmap,userId,fileName);
+        savedSuccessfully();
+    }
+
+    public void savedSuccessfully(){
+        String jsonString = null;
+        try {
+            jsonString = new JSONObject()
+                    .put(MessageDict.MESSAGE_TYPE, MessageDict.ACK)
+                    .put(MessageDict.MESSAGE, MessageDict.BITMAP_SAVED)
+                    .toString();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        sendMessage(jsonString);
     }
 
 

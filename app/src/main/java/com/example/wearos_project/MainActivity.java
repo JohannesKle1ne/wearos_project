@@ -126,6 +126,7 @@ public class MainActivity extends WearableActivity implements
                         sendBitmap(textbuilder.getResult());
                         currentLogger.log(WatchLogger.SEND);
                         sendLogs();
+                        vibrateLong();
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -133,6 +134,7 @@ public class MainActivity extends WearableActivity implements
                 } else if (keyCode == KeyEvent.KEYCODE_STEM_2) {
                     abridgeLetterTimer();
                     textbuilder.removeLetter();
+                    vibrateLong();
                     return true;
                 }
             } else {
@@ -280,7 +282,7 @@ public class MainActivity extends WearableActivity implements
     }
 
     public void vibrateLong(){
-        long milliseconds = 500;
+        long milliseconds = 200;
         int amplitude = 50;
         vibrator.vibrate(VibrationEffect.createOneShot(milliseconds,amplitude));
     }

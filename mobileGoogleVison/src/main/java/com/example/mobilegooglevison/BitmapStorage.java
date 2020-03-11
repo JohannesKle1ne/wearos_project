@@ -1,20 +1,22 @@
 package com.example.mobilegooglevison;
 
 import android.graphics.Bitmap;
+import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class BitmapStorage {
 
     private static BitmapStorage singleInstance;
 
-    private ArrayList<Bitmap> bitmapList;
-    private Bitmap currentBitmap;
-    private int currentId;
     public BitmapView delegate;
+    private HashMap<Integer,ArrayList> userHashMap;
+    private ArrayList<Bitmap> dynamicBitmaps;
 
     private BitmapStorage(){
-        bitmapList = new ArrayList<>();
+        userHashMap = new HashMap<>();
+        dynamicBitmaps = new ArrayList<>();
     }
 
     public static BitmapStorage getInstance(){
@@ -24,35 +26,28 @@ public class BitmapStorage {
         return singleInstance;
     }
 
-    public void addBitmap(Bitmap b){
-        bitmapList.add(b);
-        currentBitmap = b;
-        currentId = bitmapList.size()-1;
-        updateDelegate();
-    }
-
-    public void goRight(){
-        if (currentId+1 < bitmapList.size()) {
-            currentBitmap = bitmapList.get(currentId + 1);
-            currentId++;
-            updateDelegate();
+    public void addBitmap(Bitmap b, int userId, String filename){
+        if(userHashMap.containsKey(userId) == false){
+            userHashMap.put(userId,new ArrayList<String>());
+            userHashMap.get(userId).add(filename);
+        }else{
+            userHashMap.get(userId).add(filename);
         }
-    }
-
-    public void goLeft(){
-        if (currentId > 0) {
-            currentBitmap = bitmapList.get(currentId - 1);
-            currentId--;
-            updateDelegate();
-        }
-    }
-    public Bitmap getCurrentBitmap(){
-        return currentBitmap;
-    }
-
-    private void updateDelegate(){
+        dynamicBitmaps.add(b);
         if(delegate!=null){
-            delegate.updateBitmap();
+            delegate.showDynamic();
         }
+        Log.i("TAG Storage",dynamicBitmaps.size()+"");
+
     }
+
+
+    public ArrayList<String> getFileNames(int id){
+        return userHashMap.get(id);
+    }
+
+    public ArrayList<Bitmap> getDynamicBitmaps(){
+        return dynamicBitmaps;
+    }
+
 }
