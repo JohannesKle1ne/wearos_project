@@ -5,17 +5,20 @@ import android.graphics.Bitmap;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.View;
 
 import androidx.appcompat.widget.AppCompatImageView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 
 public class BitmapView extends AppCompatImageView {
 
     private ArrayList<Bitmap> fetchedBitmaps;
-    private ArrayList<Bitmap> dynamicBitmaps;
+    private ArrayList<Bitmap> visibleBitmaps;
     private ArrayList<Bitmap> currentBitmaps;
+    private HashMap<Integer,ArrayList> userHashMap;
 
     private Bitmap currentBitmap;
     private int currentId;
@@ -25,12 +28,14 @@ public class BitmapView extends AppCompatImageView {
 
     public BitmapView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        userHashMap = new HashMap<>();
         currentBitmaps = new ArrayList<>();
-        dynamicBitmaps = new ArrayList<>();
+        visibleBitmaps = new ArrayList<>();
         fetchedBitmaps = new ArrayList<>();
-        BitmapStorage.getInstance().delegate = this;
+        this.setVisibility(View.INVISIBLE);
+        /*BitmapStorage.getInstance().delegate = this;
         getDynamicBitmaps();
-        showDynamic();
+        showDynamic();*/
     }
 
     @Override
@@ -57,7 +62,6 @@ public class BitmapView extends AppCompatImageView {
 
     private void goRight(){
         if (currentId+1 < currentBitmaps.size()) {
-            currentBitmap = currentBitmaps.get(currentId + 1);
             currentId++;
             updateBitmap();
         }
@@ -65,7 +69,6 @@ public class BitmapView extends AppCompatImageView {
 
     private void goLeft(){
         if (currentId > 0) {
-            currentBitmap = currentBitmaps.get(currentId - 1);
             currentId--;
             updateBitmap();
         }
@@ -80,10 +83,24 @@ public class BitmapView extends AppCompatImageView {
         this.fetchedBitmaps = fetchedBitmaps;
     }
 
-    private void getDynamicBitmaps(){
-        dynamicBitmaps = BitmapStorage.getInstance().getDynamicBitmaps();
-        Log.i("TAG View",dynamicBitmaps.size()+"");
+    public void addBitmap(Bitmap b, int userId, String filename){
+        if(userHashMap.containsKey(userId) == false){
+            userHashMap.put(userId,new ArrayList<String>());
+            userHashMap.get(userId).add(filename);
+        }else{
+            userHashMap.get(userId).add(filename);
+        }
+        currentBitmaps.add(b);
+        currentId = currentBitmaps.size()-1;
+        updateBitmap();
     }
+
+
+    public ArrayList<String> getFileNames(String id){
+        return userHashMap.get(id);
+    }
+
+
 
     public void showFetched(){
         currentBitmaps = fetchedBitmaps;
@@ -91,8 +108,6 @@ public class BitmapView extends AppCompatImageView {
         updateBitmap();
     }
     public void showDynamic(){
-        currentBitmaps = dynamicBitmaps;
-        currentId = currentBitmaps.size()-1;
-        updateBitmap();
+        this.setVisibility(View.VISIBLE);
     }
 }

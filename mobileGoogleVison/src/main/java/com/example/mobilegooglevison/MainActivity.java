@@ -62,9 +62,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     TextView userId;
     TextView watchLogCount;
     LogView logView;
+    BitmapView bitmapView;
     Button startUserSession;
     Button getWatchLogs;
     EditText idInput;
+    EditText idInput_Loading;
 
     private GoogleApiClient client;
     private List<Node> connectedNode;
@@ -80,9 +82,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         getSupportActionBar().hide();
 
         setContentView(R.layout.activity_main);
+        bitmapView = findViewById(R.id.bitmapView);
         logView = findViewById(R.id.log);
         logView.setMovementMethod(new ScrollingMovementMethod());
         userId = findViewById(R.id.userId);
+        idInput_Loading = findViewById(R.id.idInput2);
         watchLogCount = findViewById(R.id.watchLogCount);
         idInput = findViewById(R.id.idInput);
         startUserSession = findViewById(R.id.button);
@@ -97,10 +101,51 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         client.connect();
     }
 
-    public void openLandscapeActivity(View v){
-        Intent intent = new Intent(this, LandscapeActivity.class);
-        startActivity(intent);
+    @Override
+    public void onBackPressed() {
+        if (bitmapView.getVisibility() == View.VISIBLE) {
+            bitmapView.setVisibility(View.INVISIBLE);
+        }else{
+            super.onBackPressed();
+        }
+
     }
+
+    public void openLandscapeActivity(View v){
+        //Intent intent = new Intent(this, LandscapeActivity.class);
+        //startActivity(intent);
+        bitmapView.showDynamic();
+    }
+
+    public void loadBitmaps(View v){
+        String userId = idInput_Loading.getText().toString();
+        ArrayList<String> fileNames = bitmapView.getFileNames(userId);
+
+        if (fileNames != null) {
+
+            FileInputStream fis;
+            ArrayList<Bitmap> bitmaps = new ArrayList<>();
+
+            for (int i = 0; i < fileNames.size(); i++) {
+                try {
+                    fis = openFileInput(fileNames.get(i));
+                    Bitmap bitmap = BitmapFactory.decodeStream(fis);
+                    bitmaps.add(bitmap);
+                    fis.close();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            bitmapView.setFetchedBitmaps(bitmaps);
+            bitmapView.showFetched();
+        }
+    }
+
+
+
+
 
     public void makeTextFromImage(Bitmap bm){
 
@@ -246,6 +291,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     public void saveBitmap(Bitmap bitmap, int userId){
+
         //write External
         if (checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 && isExternalStorageWritable()) {
@@ -302,7 +348,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             e.printStackTrace();
         }
 
-        BitmapStorage.getInstance().addBitmap(bitmap,userId,fileName);
+        bitmapView.addBitmap(bitmap,userId,fileName);
         savedSuccessfully();
     }
 

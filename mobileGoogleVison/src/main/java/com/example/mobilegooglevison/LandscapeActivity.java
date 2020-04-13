@@ -47,27 +47,6 @@ public class LandscapeActivity extends AppCompatActivity {
     // in view einfach ne id aneben und die Bitmaps angezeigt bekommen
     public void fetch(int userId){
 
-        ArrayList<String> fileNames = BitmapStorage.getInstance().getFileNames(userId);
 
-        if (fileNames != null) {
-
-            FileInputStream fis;
-            ArrayList<Bitmap> bitmaps = new ArrayList<>();
-
-            for (int i = 0; i < fileNames.size(); i++) {
-                try {
-                    fis = openFileInput(fileNames.get(i));
-                    Bitmap bitmap = BitmapFactory.decodeStream(fis);
-                    bitmaps.add(bitmap);
-                    fis.close();
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            bitmapView.setFetchedBitmaps(bitmaps);
-            bitmapView.showFetched();
-        }
     }
 }
