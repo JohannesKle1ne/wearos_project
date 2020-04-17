@@ -4,18 +4,18 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/grey"
+    android:background="#FFE77A"
     tools:context=".MainActivity">
 
     <EditText
-        android:id="@+id/idInput"
+        android:id="@+id/idInputForStarting"
         android:layout_width="76dp"
         android:layout_height="31dp"
         android:background="#FFFFFF"
         android:inputType="number"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/log"
-        app:layout_constraintTop_toBottomOf="@+id/button" />
+        app:layout_constraintTop_toBottomOf="@+id/startUserSession" />
 
     <TextView
         android:id="@+id/userId"
@@ -24,17 +24,18 @@
         android:textSize="20dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/log"
-        app:layout_constraintTop_toBottomOf="@+id/idInput" />
+        app:layout_constraintTop_toBottomOf="@+id/idInputForStarting" />
 
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/startUserSession"
         android:layout_width="70dp"
         android:layout_height="78dp"
         android:layout_marginBottom="50dp"
-        android:onClick="sendUserInformation"
+        android:onClick="handleButtonClick"
         android:text="Start User Session"
         android:textSize="10dp"
+        android:background="#5F60FA"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/log"
@@ -44,9 +45,10 @@
         android:id="@+id/showBitmaps"
         android:layout_width="182dp"
         android:layout_height="81dp"
-        android:onClick="openLandscapeActivity"
+        android:onClick="handleButtonClick"
         android:text="Show Bitmaps"
         android:textSize="10dp"
+        android:background="#5F60FA"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -54,26 +56,26 @@
 
     <Button
         android:id="@+id/loadBitmaps"
-        android:layout_width="59dp"
-        android:layout_height="77dp"
-        android:onClick="openLandscapeActivity"
+        android:layout_width="70dp"
+        android:layout_height="78dp"
+        android:background="#5F60FA"
+        android:onClick="handleButtonClick"
         android:text="Load Bitmaps"
         android:textSize="10dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/startUserSession"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/showBitmaps"
-        app:layout_constraintTop_toBottomOf="@+id/log" />
+        app:layout_constraintStart_toEndOf="@+id/log"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
-        android:id="@+id/idInput2"
+        android:id="@+id/idInputForLoading"
         android:layout_width="76dp"
         android:layout_height="31dp"
         android:background="#FFFFFF"
         android:inputType="number"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/log"
-        app:layout_constraintTop_toBottomOf="@+id/button" />
+        app:layout_constraintTop_toBottomOf="@+id/loadBitmaps" />
 
 
     <com.example.mobilegooglevison.LogView
@@ -94,9 +96,9 @@
     <com.example.mobilegooglevison.BitmapView
         android:rotation="90"
         android:id="@+id/bitmapView"
-        android:layout_width="540dp"
-        android:layout_height="340dp"
-        android:background="#646161"
+        android:layout_width="570dp"
+        android:layout_height="360dp"
+        android:background="#FFFFFF"
         android:translationZ="2dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

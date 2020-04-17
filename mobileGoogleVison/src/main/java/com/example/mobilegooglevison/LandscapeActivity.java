@@ -38,7 +38,7 @@ public class LandscapeActivity extends AppCompatActivity {
         liveBitmaps.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                bitmapView.showDynamic();
+                //bitmapView.showDynamic();
             }
         });
     }

@@ -35,7 +35,7 @@ public class BitmapStorage {
         }
         dynamicBitmaps.add(b);
         if(delegate!=null){
-            delegate.showDynamic();
+            //delegate.showDynamic();
         }
         Log.i("TAG Storage",dynamicBitmaps.size()+"");
 

@@ -11,25 +11,20 @@ import java.util.Calendar;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
+
 import android.os.Bundle;
 
 import android.os.Environment;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Base64;
 import android.util.Log;
-import android.util.SparseArray;
 
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.shared.MessageDict;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -38,10 +33,6 @@ import com.google.android.gms.wearable.MessageClient;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Node;
 
-
-import com.google.android.gms.vision.Frame;
-import com.google.android.gms.vision.text.TextBlock;
-import com.google.android.gms.vision.text.TextRecognizer;
 import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 
@@ -60,19 +51,14 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks {
 
     TextView userId;
-    TextView watchLogCount;
     LogView logView;
     BitmapView bitmapView;
-    Button startUserSession;
-    Button getWatchLogs;
-    EditText idInput;
+    EditText idInput_Starting;
     EditText idInput_Loading;
 
     private GoogleApiClient client;
     private List<Node> connectedNode;
     private static final String TAG = "PHONE_MAIN";
-    private static final String RESULT_VIEW_DEFAULT = "Result: ";
-    private static final String RECEIVED_VIEW_DEFAULT = "Received: ";
 
 
     @SuppressLint("ClickableViewAccessibility")
@@ -86,13 +72,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         logView = findViewById(R.id.log);
         logView.setMovementMethod(new ScrollingMovementMethod());
         userId = findViewById(R.id.userId);
-        idInput_Loading = findViewById(R.id.idInput2);
-        watchLogCount = findViewById(R.id.watchLogCount);
-        idInput = findViewById(R.id.idInput);
-        startUserSession = findViewById(R.id.button);
-        getWatchLogs = findViewById(R.id.getWatchLogs);
-
-
+        idInput_Loading = findViewById(R.id.idInputForLoading);
+        idInput_Starting = findViewById(R.id.idInputForStarting);
 
         client = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
@@ -109,77 +90,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             super.onBackPressed();
         }
 
-    }
-
-    public void openLandscapeActivity(View v){
-        //Intent intent = new Intent(this, LandscapeActivity.class);
-        //startActivity(intent);
-        bitmapView.showDynamic();
-    }
-
-    public void loadBitmaps(View v){
-        String userId = idInput_Loading.getText().toString();
-        ArrayList<String> fileNames = bitmapView.getFileNames(userId);
-
-        if (fileNames != null) {
-
-            FileInputStream fis;
-            ArrayList<Bitmap> bitmaps = new ArrayList<>();
-
-            for (int i = 0; i < fileNames.size(); i++) {
-                try {
-                    fis = openFileInput(fileNames.get(i));
-                    Bitmap bitmap = BitmapFactory.decodeStream(fis);
-                    bitmaps.add(bitmap);
-                    fis.close();
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            bitmapView.setFetchedBitmaps(bitmaps);
-            bitmapView.showFetched();
-        }
-    }
-
-
-
-
-
-    public void makeTextFromImage(Bitmap bm){
-
-        //other branch
-        //bitmapView.setImageBitmap(bm);
-
-        Bitmap bitmap = bm;
-
-        //bitmapView.setImageBitmap(bitmap);
-
-        TextRecognizer tr = new TextRecognizer.Builder(getApplicationContext()).build();
-
-        if(!tr.isOperational()){
-            Toast.makeText(getApplicationContext(), "Could not get the Text",Toast.LENGTH_SHORT).show();
-        }else{
-            Frame frame = new Frame.Builder().setBitmap(bitmap).build();
-            SparseArray<TextBlock> items = tr.detect(frame);
-            StringBuilder sb = new StringBuilder();
-            for(int i=0; i<items.size(); i++){
-                TextBlock myItem = items.valueAt(i);
-                sb.append(myItem.getValue());
-            }
-            String result = sb.toString();
-            //used when word is concatinated at phone
-            //receivedView.setText(receivedView.getText().toString()+sb.toString());
-        }
-    }
-
-    private Bitmap addBlackBorder(Bitmap bmp, int borderSize) {
-        Bitmap bmpWithBorder = Bitmap.createBitmap(bmp.getWidth() + borderSize * 2, bmp.getHeight() + borderSize * 2, bmp.getConfig());
-        Canvas canvas = new Canvas(bmpWithBorder);
-        canvas.drawColor(Color.BLACK);
-        canvas.drawBitmap(bmp, borderSize, borderSize, null);
-        return bmpWithBorder;
     }
 
     @Override
@@ -227,27 +137,19 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     byte[] encodeByte = Base64.decode(bitmapString, Base64.DEFAULT);
                     Bitmap bitmap = BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
 
-                    //bitmapView.setImageBitmap(bitmap);
-
                     saveBitmap(bitmap,userId);
                 }
                 break;
             case (MessageDict.LOG):
                 JSONArray messageArray = jsonObject.getJSONArray(MessageDict.MESSAGE);
-                boolean successfulSaved = true;
 
                 for (int i = 0; i < messageArray.length(); i++) {
                     JSONObject currentObject = messageArray.getJSONObject(i);
                     String log = currentObject.getString(MessageDict.LOG);
                     String fileName = currentObject.getString(MessageDict.FILE_NAME);
 
-                    successfulSaved = saveLog(log, fileName)&&successfulSaved;
+                    saveLog(log, fileName);
                     logView.setText("Log: \n\n"+log);
-                }
-                if(successfulSaved){
-                    //watchLogCount.setText(messageArray.length()+" log files saved");
-                }else{
-                    //watchLogCount.setText("SAVE ERROR");
                 }
 
                 break;
@@ -256,7 +158,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
     }
 
-    private boolean saveLog(String log, String fileName) {
+    private void saveLog(String log, String fileName) {
         if (checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 && isExternalStorageWritable()) {
 
@@ -272,21 +174,16 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     fos = new FileOutputStream(textFile);
                     fos.write(log.getBytes());
                     fos.close();
-                    return true;
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
-                    return false;
                 } catch (IOException e) {
                     e.printStackTrace();
-                    return false;
                 }
             } else {
                 Log.i(TAG, "directory does not exist");
-                return false;
             }
         } else {
             Log.i(TAG, "write permission not granted!");
-            return false;
         }
     }
 
@@ -330,6 +227,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     private void saveInternal(Bitmap bitmap, int userId){
         //write internal
+        File directory = new File(getFilesDir(), "userSession_"+userId);
+        if(!directory.exists()){
+            directory.mkdir();
+        }
         String fileName = Calendar.getInstance().getTime().toString()
                 .substring(4, 19).replaceAll("\\s+", "_")
                 .replaceAll(":", "-")
@@ -337,7 +238,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
         FileOutputStream fos;
         try {
-            fos = openFileOutput(fileName,MODE_PRIVATE);
+            fos = new FileOutputStream(new File(directory, fileName));
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
 
             fos.flush();
@@ -348,7 +249,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             e.printStackTrace();
         }
 
-        bitmapView.addBitmap(bitmap,userId,fileName);
+        bitmapView.addBitmap(bitmap);
         savedSuccessfully();
     }
 
@@ -365,6 +266,66 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         sendMessage(jsonString);
     }
 
+    public void handleButtonClick(View v){
+        switch (v.getId()) {
+
+            case R.id.startUserSession:
+                String idS = idInput_Starting.getText().toString();
+                if (idS != null && !idS.isEmpty()) {
+                    sendUserInformation(idS);
+                } else {
+                    Log.i(TAG, "id input Field is empty!");
+                }
+                break;
+            case R.id.showBitmaps:
+                bitmapView.show(BitmapView.INCOMING);
+                break;
+            case R.id.loadBitmaps:
+                String idL = idInput_Loading.getText().toString();
+                if (idL != null && !idL.isEmpty()) {
+                    loadBitmaps(idL);
+                } else {
+                    Log.i(TAG, "id input Field is empty!");
+                }
+                break;
+
+        }
+
+    }
+
+    public void loadBitmaps(String idString){
+
+        int userId = Integer.parseInt(idString);
+
+        File[] fileNames;
+
+        File directory = new File(getFilesDir(), "userSession_"+userId);
+
+        if (directory.exists()) {
+
+            fileNames = directory.listFiles();
+            Log.i(TAG,"Files: "+fileNames);
+            FileInputStream fis;
+            ArrayList<Bitmap> bitmaps = new ArrayList<>();
+
+            for (int i = 0; i < fileNames.length; i++) {
+                try {
+                    Log.i(TAG,"fileName: "+fileNames[i].getName());
+                    fis = new FileInputStream(fileNames[i]);
+                    Bitmap bitmap = BitmapFactory.decodeStream(fis);
+                    bitmaps.add(bitmap);
+                    fis.close();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            Log.i(TAG,String.valueOf(bitmaps.size()));
+            bitmapView.setLoadedBitmaps(bitmaps);
+            bitmapView.show(BitmapView.LOADED);
+        }
+    }
 
 
     public boolean isExternalStorageWritable(){
@@ -380,25 +341,20 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         return (check == PackageManager.PERMISSION_GRANTED);
     }
 
-    public void sendUserInformation(View v){
-        String id = idInput.getText().toString();
-        if(id != null && !id.isEmpty()) {
-            try {
-                String jsonString = new JSONObject()
-                        .put(MessageDict.MESSAGE_TYPE, MessageDict.USER)
-                        .put(MessageDict.MESSAGE, new JSONObject()
-                                .put(MessageDict.USER, new JSONObject()
-                                        .put(MessageDict.ID, id)))
-                        .toString();
-                sendMessage(jsonString);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            userId.setText(idInput.getText());
-            idInput.getText().clear();
-        }else{
-            Log.i(TAG, "id input Field is empty!");
+    public void sendUserInformation(String id) {
+        try {
+            String jsonString = new JSONObject()
+                    .put(MessageDict.MESSAGE_TYPE, MessageDict.USER)
+                    .put(MessageDict.MESSAGE, new JSONObject()
+                            .put(MessageDict.USER, new JSONObject()
+                                    .put(MessageDict.ID, id)))
+                    .toString();
+            sendMessage(jsonString);
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
+        userId.setText(idInput_Starting.getText());
+        idInput_Starting.getText().clear();
     }
 
     private void sendHey(){
@@ -414,15 +370,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     public void requestWatchLogs(View v){
-        /*try {
-            String jsonString = new JSONObject()
-                    .put(MessageDict.MESSAGE_TYPE,MessageDict.LOG_REQUEST)
-                    .put(MessageDict.MESSAGE,null)
-                    .toString();
-            sendMessage(jsonString);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }*/
         try {
             String jsonString = new JSONObject()
                     .put(MessageDict.MESSAGE_TYPE,MessageDict.END_USER_SESSION)

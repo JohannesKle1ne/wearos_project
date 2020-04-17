@@ -2,6 +2,7 @@ package com.example.mobilegooglevison;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -15,27 +16,30 @@ import java.util.HashMap;
 
 public class BitmapView extends AppCompatImageView {
 
-    private ArrayList<Bitmap> fetchedBitmaps;
+    private ArrayList<Bitmap> loadedBitmaps;
     private ArrayList<Bitmap> visibleBitmaps;
-    private ArrayList<Bitmap> currentBitmaps;
-    private HashMap<Integer,ArrayList> userHashMap;
+    private ArrayList<Bitmap> incomingBitmaps;
+    public final static int LOADED = 0;
+    public final static int INCOMING = 1;
 
-    private Bitmap currentBitmap;
-    private int currentId;
+
+    private final String TAG = "BitmapView";
+
+    private Bitmap visibleBitmap;
+    private int visibleId;
 
     private int down;
     private int up;
 
     public BitmapView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        userHashMap = new HashMap<>();
-        currentBitmaps = new ArrayList<>();
+
+        incomingBitmaps = new ArrayList<>();
         visibleBitmaps = new ArrayList<>();
-        fetchedBitmaps = new ArrayList<>();
+        loadedBitmaps = new ArrayList<>();
+        visibleBitmaps = incomingBitmaps;
+
         this.setVisibility(View.INVISIBLE);
-        /*BitmapStorage.getInstance().delegate = this;
-        getDynamicBitmaps();
-        showDynamic();*/
     }
 
     @Override
@@ -61,53 +65,55 @@ public class BitmapView extends AppCompatImageView {
     }
 
     private void goRight(){
-        if (currentId+1 < currentBitmaps.size()) {
-            currentId++;
+        if (visibleId +1 < visibleBitmaps.size()) {
+            visibleId++;
             updateBitmap();
         }
     }
 
     private void goLeft(){
-        if (currentId > 0) {
-            currentId--;
+        if (visibleId > 0) {
+            visibleId--;
             updateBitmap();
         }
     }
 
     private void updateBitmap(){
-        currentBitmap = currentBitmaps.get(currentId);
-        this.setImageBitmap(currentBitmap);
-    }
-
-    public void setFetchedBitmaps(ArrayList<Bitmap> fetchedBitmaps){
-        this.fetchedBitmaps = fetchedBitmaps;
-    }
-
-    public void addBitmap(Bitmap b, int userId, String filename){
-        if(userHashMap.containsKey(userId) == false){
-            userHashMap.put(userId,new ArrayList<String>());
-            userHashMap.get(userId).add(filename);
-        }else{
-            userHashMap.get(userId).add(filename);
+        if(!visibleBitmaps.isEmpty()) {
+            visibleBitmap = visibleBitmaps.get(visibleId);
+            this.setImageBitmap(visibleBitmap);
         }
-        currentBitmaps.add(b);
-        currentId = currentBitmaps.size()-1;
-        updateBitmap();
+    }
+
+    public void setLoadedBitmaps(ArrayList<Bitmap> fetchedBitmaps){
+        this.loadedBitmaps = fetchedBitmaps;
+    }
+
+    public void addBitmap(Bitmap b){
+        incomingBitmaps.add(b);
+        if(visibleBitmaps==incomingBitmaps){
+            visibleId = visibleBitmaps.size()-1;
+            updateBitmap();
+        }
     }
 
 
-    public ArrayList<String> getFileNames(String id){
-        return userHashMap.get(id);
-    }
-
-
-
-    public void showFetched(){
-        currentBitmaps = fetchedBitmaps;
-        currentId = 0;
-        updateBitmap();
-    }
-    public void showDynamic(){
-        this.setVisibility(View.VISIBLE);
+    public void show(int type){
+        if((type==LOADED) && !loadedBitmaps.isEmpty()){
+            visibleBitmaps = loadedBitmaps;
+            visibleId = 0;
+            this.setBackgroundColor(Color.parseColor("#AD9731"));
+            updateBitmap();
+            this.setVisibility(View.VISIBLE);
+        }
+        if((type==INCOMING)) {
+            visibleBitmaps = incomingBitmaps;
+            this.setBackgroundColor(Color.parseColor("#FADD5F"));
+            this.setVisibility(View.VISIBLE);
+            if(!incomingBitmaps.isEmpty()){
+                visibleId = visibleBitmaps.size() - 1;
+                updateBitmap();
+            }
+        }
     }
 }
