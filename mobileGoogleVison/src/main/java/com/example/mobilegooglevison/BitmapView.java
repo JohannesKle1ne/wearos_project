@@ -102,13 +102,13 @@ public class BitmapView extends AppCompatImageView {
         if((type==LOADED) && !loadedBitmaps.isEmpty()){
             visibleBitmaps = loadedBitmaps;
             visibleId = 0;
-            this.setBackgroundColor(Color.parseColor("#AD9731"));
+            this.setBackgroundColor(Color.parseColor("#88807b"));
             updateBitmap();
             this.setVisibility(View.VISIBLE);
         }
         if((type==INCOMING)) {
             visibleBitmaps = incomingBitmaps;
-            this.setBackgroundColor(Color.parseColor("#FADD5F"));
+            this.setBackgroundColor(Color.parseColor("#88807b"));
             this.setVisibility(View.VISIBLE);
             if(!incomingBitmaps.isEmpty()){
                 visibleId = visibleBitmaps.size() - 1;

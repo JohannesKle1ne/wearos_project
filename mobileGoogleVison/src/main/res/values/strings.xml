@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">TextRecognizer</string>
+    <string name="app_name">HideWrite</string>
     <string name="resultViewDefault">Recognized:</string>
     <string name="receivedViewDefault">Result:</string>
 

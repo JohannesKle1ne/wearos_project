@@ -7,6 +7,7 @@ import androidx.core.content.ContextCompat;
 
 import java.io.FileInputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 
 import android.Manifest;
@@ -23,6 +24,8 @@ import android.util.Base64;
 import android.util.Log;
 
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -80,6 +83,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 .addApi(Wearable.API)
                 .build();
         client.connect();
+        Log.i(TAG, "Files in internal storage: "+ Arrays.toString(fileList()));
     }
 
     @Override
