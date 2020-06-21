@@ -11,6 +11,8 @@ import android.view.View;
 import androidx.appcompat.widget.AppCompatImageView;
 
 import java.util.ArrayList;
+import android.widget.LinearLayout;
+
 import java.util.HashMap;
 
 
@@ -97,19 +99,20 @@ public class BitmapView extends AppCompatImageView {
         }
     }
 
-
     public void show(int type){
         if((type==LOADED) && !loadedBitmaps.isEmpty()){
             visibleBitmaps = loadedBitmaps;
             visibleId = 0;
-            this.setBackgroundColor(Color.parseColor("#88807b"));
+            this.setBackgroundColor(Color.parseColor("#FFFFFF"));
             updateBitmap();
             this.setVisibility(View.VISIBLE);
+            ((LinearLayout) this.getParent()).setVisibility(VISIBLE);
         }
         if((type==INCOMING)) {
             visibleBitmaps = incomingBitmaps;
-            this.setBackgroundColor(Color.parseColor("#88807b"));
+            this.setBackgroundColor(Color.parseColor("#FFFFFF"));
             this.setVisibility(View.VISIBLE);
+            ((LinearLayout) this.getParent()).setVisibility(VISIBLE);
             if(!incomingBitmaps.isEmpty()){
                 visibleId = visibleBitmaps.size() - 1;
                 updateBitmap();

@@ -101,17 +101,33 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.example.mobilegooglevison.BitmapView
+    <LinearLayout
         android:rotation="90"
-        android:id="@+id/bitmapView"
+        android:id="@+id/bitmapLayout"
         android:layout_width="570dp"
         android:layout_height="360dp"
-        android:background="#FFFFFF"
+        android:background="#88807b"
         android:translationZ="2dp"
+        android:visibility="invisible"
+        android:gravity="center"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.example.mobilegooglevison.BitmapView
+            android:id="@+id/bitmapView"
+            android:layout_width="570dp"
+            android:layout_height="60dp"
+            android:background="#FFFFFF"
+            android:translationZ="3dp"
+            android:adjustViewBounds="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </LinearLayout>
 
 
 

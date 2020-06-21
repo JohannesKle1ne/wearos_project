@@ -27,6 +27,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.shared.MessageDict;
@@ -56,6 +57,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     TextView userId;
     LogView logView;
     BitmapView bitmapView;
+    LinearLayout bitmapLayout;
     EditText idInput_Starting;
     EditText idInput_Loading;
 
@@ -71,6 +73,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         getSupportActionBar().hide();
 
         setContentView(R.layout.activity_main);
+        bitmapLayout = findViewById(R.id.bitmapLayout);
         bitmapView = findViewById(R.id.bitmapView);
         logView = findViewById(R.id.log);
         logView.setMovementMethod(new ScrollingMovementMethod());
@@ -88,8 +91,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     @Override
     public void onBackPressed() {
-        if (bitmapView.getVisibility() == View.VISIBLE) {
+        if (bitmapView.getVisibility() == View.VISIBLE ||
+                bitmapLayout.getVisibility() == View.VISIBLE) {
             bitmapView.setVisibility(View.INVISIBLE);
+            bitmapLayout.setVisibility(View.INVISIBLE);
         }else{
             super.onBackPressed();
         }
