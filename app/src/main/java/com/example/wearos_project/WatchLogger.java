@@ -109,6 +109,18 @@ public class WatchLogger {
         }
     }
 
+    private double calculateDuration() {
+        if (words.size() < 1) {
+            return 0;
+        } else {
+            double wordsStart = words.get(0).getStartTime();
+            double wordsEnd = words.get(words.size() - 1).getFinishTime();
+            double duration = (wordsEnd - wordsStart) / 60000;
+            return Math.round(duration * 100.0) / 100.0;
+        }
+    }
+
+
 
     private class LogEntry{
 
@@ -167,7 +179,7 @@ public class WatchLogger {
                 case (RESET): this.logString = "reset all letters";
                     break;
                 case (SEND):
-                        this.logString = "message sent. entry speed: "+calculateWpm()+" wpm";
+                        this.logString = "message sent. entry speed: "+calculateWpm()+" wpm, duration: "+calculateDuration()+ " min";
                         words.clear();
                     break;
                 case(REP_A):
